@@ -7,6 +7,8 @@
 
   Assurez-vous de les installer sur votre machine avant le démarrage.
 
+## Démarrage du projet
+
 1. ## Cloner le repo git via la commande :
 
    ```
