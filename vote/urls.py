@@ -1,6 +1,6 @@
 from django.urls import path, include
 
-from vote.views1 import CustomUserDetailView, CustomUserView
+from vote.views1 import CustomUserDetailView, CustomUserView, ProfilElecteurDetailView, ProfilElecteurView
 from . import views 
 
 from rest_framework import routers
@@ -18,7 +18,11 @@ router.register(r'candidatures', CandidatureModelViewSet)
 urlpatterns = [
     #path('votes/', views.votes)
     path('', include(router.urls)),
-    path('apiview/', CustomUserView.as_view()),
-    path('apiview/<int:pk>/', CustomUserDetailView.as_view())
+
+    path('v2/users/', CustomUserView.as_view()),
+    path('v2/users/<int:pk>/', CustomUserDetailView.as_view()),
+    path('v2/electeurs/', ProfilElecteurView.as_view()),
+    path('v2/electeurs/<int:pk>/', ProfilElecteurDetailView.as_view()),
+    
 
 ]

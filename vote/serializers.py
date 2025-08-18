@@ -12,6 +12,12 @@ class ProfilElecteurSerializer(serializers.ModelSerializer):
         model = ProfilElecteur
         fields = '__all__'
 
+class ProfilElecteurGetSerializer(serializers.ModelSerializer):
+    user = CustomUserSerializer()
+    class Meta:
+        model = ProfilElecteur
+        fields = '__all__'
+
 class ProfilSuperviseurSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProfilSuperviseur
