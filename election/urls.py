@@ -24,5 +24,6 @@ urlpatterns = [
     path('api/v1/', include([
         path('', include('vote.urls')),
         path('swagger/schema', schema_view.with_ui('swagger', cache_timeout=0), name='swagger-schema')
-        ])),
+        ])
+    ),
 ]
