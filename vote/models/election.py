@@ -1,6 +1,6 @@
 from django.db import models
-from .superviseur import ProfilSuperviseur
-from .electeur import ProfilElecteur
+
+from vote.models.user import CustomUser
 
 class Election(models.Model):
     nom = models.CharField(max_length= 100)
@@ -11,9 +11,9 @@ class Election(models.Model):
         ('en_cours', 'En cours'),
         ('terminee', 'Terminée')
     ], default='a_venir')
-    superviseur = models.ForeignKey(ProfilSuperviseur, on_delete=models.CASCADE, related_name='superviseur')
-    electeurs = models.ManyToManyField(ProfilElecteur, through="Vote", through_fields=('election', 'electeur')) # cles etrangeres a preciser pour le vote
-    candidats = models.ManyToManyField(ProfilElecteur, through="Candidature", related_name='candidats') 
+    superviseur = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='superviseur')
+    electeurs = models.ManyToManyField(CustomUser, through="Vote", through_fields=('election', 'electeur')) # cles etrangeres a preciser pour le vote
+    candidats = models.ManyToManyField(CustomUser, through="Candidature", related_name='candidats') 
 
     def __str__(self):
         return self.nom
