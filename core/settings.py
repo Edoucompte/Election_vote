@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'drf_yasg',
     'vote',
     'django_seed',
+    'django_filters'
 ]
 
 MIDDLEWARE = [
@@ -78,8 +79,11 @@ WSGI_APPLICATION = 'core.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.sqlite3', # 'djano.db.backends.postgresql'
+        'NAME': BASE_DIR / 'db.sqlite3', #'electiondb', 
+        #'USER': 'postgres',
+        #'HOST': 'localhost',
+        #'PORT': 5432
     }
 }
 
@@ -130,7 +134,12 @@ REST_FRAMEWORK = {
         'rest_framework.pagination.PageNumberPagination',
     
     # Show 5 records in a single page
-    'PAGE_SIZE': 5
+    'PAGE_SIZE': 6,
+    'DEFAULT_FILTER_BACKENDS': (
+        'django_filters.rest_framework.DjangoFilterBackend',
+        'rest_framework.filters.SearchFilter',
+        'rest_framework.filters.OrderingFilter'
+    ),
 }
 
 AUTH_USER_MODEL = "vote.CustomUser"
