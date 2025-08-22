@@ -16,4 +16,4 @@ class CustomUserModelViewSet(viewsets.ModelViewSet):
     #filterset_class = UserFilter
     filter_fields = ( 'is_active', 'is_superviseur', 'sexe')
     search_fields = ('first_name', 'last_name', 'email')
-    ordering_fields = ('+first_name', )
+    ordering_fields = ('first_name', )

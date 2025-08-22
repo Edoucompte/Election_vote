@@ -41,7 +41,8 @@ INSTALLED_APPS = [
     'drf_yasg',
     'vote',
     'django_seed',
-    'django_filters'
+    'django_filters',
+    'djangorestframework-simplejwt',
 ]
 
 MIDDLEWARE = [
@@ -140,6 +141,9 @@ REST_FRAMEWORK = {
         'rest_framework.filters.SearchFilter',
         'rest_framework.filters.OrderingFilter'
     ),
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthenticastion'
+    ]
 }
 
 AUTH_USER_MODEL = "vote.CustomUser"
