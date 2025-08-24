@@ -5,3 +5,4 @@ django-seed
 django-filter
 psycopg2-binary
 djangorestframework-simplejwt
+python-dotenv

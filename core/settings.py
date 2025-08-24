@@ -153,7 +153,7 @@ LOGGING = {
     "disable_existing_loggers": False,
     "formatters": {
         "default_formatter": {
-            '()': 'Logs.ColoredFormatter',
+            '()': 'logs.ColoredFormatter',
             "format": "[%(asctime)s] %(levelname)s: \t%(message)s",
             "datefmt": "%H:%M:%S",
         },
