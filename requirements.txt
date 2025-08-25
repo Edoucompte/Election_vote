@@ -1,3 +1,7 @@
 django-admin
 djangorestframework
 drf_yasg
+django-seed
+django-filter
+psycopg2-binary
+djangorestframework-simplejwt

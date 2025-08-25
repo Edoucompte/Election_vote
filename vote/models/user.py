@@ -11,6 +11,9 @@ class CustomUser(AbstractUser):
     ])
     date_naissance = models.DateField()
     matricule = models.BigIntegerField()
+    is_electeur = models.BooleanField(default=False)
+    is_superviseur = models.BooleanField(default=False)
+    is_candidat = models.BooleanField(default=False)
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
