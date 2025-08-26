@@ -11,6 +11,9 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+from dotenv import load_dotenv
+load_dotenv()
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,7 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-f=fg4xi*lca1@=#=m+bgi0&(wue9=sfh2#f#_8q-mk7d1sym3l'
+SECRET_KEY = str(os.getenv('SECRET_KEY'))
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -42,7 +45,6 @@ INSTALLED_APPS = [
     'vote',
     'django_seed',
     'django_filters',
-    'djangorestframework-simplejwt',
 ]
 
 MIDDLEWARE = [
@@ -80,11 +82,11 @@ WSGI_APPLICATION = 'core.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3', # 'djano.db.backends.postgresql'
-        'NAME': BASE_DIR / 'db.sqlite3', #'electiondb', 
-        #'USER': 'postgres',
-        #'HOST': 'localhost',
-        #'PORT': 5432
+        'ENGINE': str(os.getenv('DJANGO_DB_ENGINE')), #'django.db.backends.sqlite3', 
+        'NAME': str(os.getenv('DJANGO_DB_ENGINE')), #BASE_DIR / 'db.sqlite3', 
+        'USER': str(os.getenv('DJANGO_DB_NAME')),
+        'HOST': str(os.getenv('DJANGO_DB_USER')),
+        'PORT': str(os.getenv('DJANGO_DB_PORT')),
     }
 }
 
@@ -142,7 +144,11 @@ REST_FRAMEWORK = {
         'rest_framework.filters.OrderingFilter'
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthenticastion'
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
     ]
 }
 
@@ -153,7 +159,7 @@ LOGGING = {
     "disable_existing_loggers": False,
     "formatters": {
         "default_formatter": {
-            '()': 'Logs.ColoredFormatter',
+            '()': 'logs.ColoredFormatter',
             "format": "[%(asctime)s] %(levelname)s: \t%(message)s",
             "datefmt": "%H:%M:%S",
         },
