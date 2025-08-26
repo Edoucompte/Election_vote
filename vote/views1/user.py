@@ -3,8 +3,10 @@ from rest_framework.views import APIView
 from rest_framework import response, status
 from vote.serializers import CustomUserSerializer
 from django.http import Http404
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
 class CustomUserView(APIView):
+    permission_classes =[IsAuthenticatedOrReadOnly]
     def get(self, request, *args, **kwargs):
         users = CustomUser.objects.all()
         serializer = CustomUserSerializer(users, many=True)
@@ -25,6 +27,7 @@ class CustomUserView(APIView):
         return response.Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class CustomUserDetailView(APIView):
+    permission_classes =[IsAuthenticatedOrReadOnly]
     def get_object(self, pk):
         try:
             return CustomUser.objects.get(pk=pk)

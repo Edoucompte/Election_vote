@@ -24,7 +24,7 @@ class VoteView(APIView):
         print(serializer.errors)
         return response.Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class VoteView(APIView):
+class VoteDetailView(APIView):
     def get_object(self, pk):
         try:
             return Vote.objects.get(pk=pk)
