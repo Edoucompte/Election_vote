@@ -1,7 +1,8 @@
-django-admin
-djangorestframework
-drf_yasg
-django-seed
-django-filter
-psycopg2-binary
-djangorestframework-simplejwt
+Django==5.2.5
+djangorestframework==3.16.1
+drf_yasg==1.21.10
+django-seed==0.3.1
+django-filter==25.1
+psycopg2-binary==2.9.10
+djangorestframework-simplejwt==5.5.1
+python-dotenv==1.1.1
