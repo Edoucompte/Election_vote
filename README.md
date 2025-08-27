@@ -4,6 +4,7 @@
 
 - Python 3.10+ et pip
 - Django 5.2
+- python-venv
 
   Assurez-vous de les installer sur votre machine avant le démarrage.
 
