@@ -1,12 +1,12 @@
 from vote.models import CustomUser
 from rest_framework.views import APIView
 from rest_framework import response, status
-from vote.serializers import CustomUserSerializer
+from vote.serializers import CustomUserSerializer, UserModifySerializer
 from django.http import Http404
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
 class CustomUserView(APIView):
-    permission_classes =[IsAuthenticatedOrReadOnly]
+    #permission_classes =[IsAuthenticatedOrReadOnly]
     def get(self, request, *args, **kwargs):
         users = CustomUser.objects.all()
         serializer = CustomUserSerializer(users, many=True)
@@ -19,7 +19,7 @@ class CustomUserView(APIView):
         return response.Response(res, status=status.HTTP_200_OK)
     
     def post(self, request):
-        serializer = CustomUserSerializer(data=request.data)
+        serializer = UserModifySerializer(data=request.data)
         if(serializer.is_valid):
             serializer.save()
             return response.Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -47,7 +47,7 @@ class CustomUserDetailView(APIView):
 
     def put(self, request, pk, *args, **kwargs):
         user = self.get_object(pk)
-        serializer = CustomUserSerializer(user, data=request.data)
+        serializer = UserModifySerializer(user, data=request.data)
         if(serializer.is_valid):
             serializer.save()
             return response.Response(serializer.data, status=status.HTTP_200_OK)
