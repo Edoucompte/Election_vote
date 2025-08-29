@@ -1,11 +1,32 @@
 from vote.models import CustomUser
 from rest_framework.views import APIView
-from rest_framework import response, status
+from rest_framework import response, status, authentication, exceptions
 from vote.serializers import CustomUserSerializer, UserModifySerializer
 from django.http import Http404
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from vote.encryption import decodeToken
+
+class CustomAuthentication(authentication.BasicAuthentication):
+    def authenticate(self, request):
+        #extraire le token di header
+        token = request.META.get('BEARER')
+        if not token:
+            return None
+        
+        #decrypter token jwt
+        payload = decodeToken(token, "mon_secret")
+        ## verifier expiration
+
+        # verifier le user
+        try:
+            user = CustomUser.objects.get(id=payload.get('sub'), email=payload.get('email') )
+        except CustomUser.DoesNotExist:
+            raise exceptions.AuthenticationFailed('No such user')
+
+        return (user, token)
 
 class CustomUserView(APIView):
+    authentication_classes = [CustomAuthentication]
     #permission_classes =[IsAuthenticatedOrReadOnly]
     def get(self, request, *args, **kwargs):
         users = CustomUser.objects.all()
