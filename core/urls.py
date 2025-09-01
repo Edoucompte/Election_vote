@@ -7,6 +7,8 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 
+from vote.views1 import login, refresh
+
 schema_view = swagger_get_schema_view(
     openapi.Info(
         title='Api Vote election',
@@ -32,6 +34,8 @@ urlpatterns = [
     ),
 
     #auth routes
-    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/token/refresh', TokenRefreshView.as_view(), name='token_refresh'),
+    path('api/token/', login, name='token_obtain_pair'),
+    path('api/token/refresh', refresh, name='token_refresh'),
+    #path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    #path('api/token/refresh', TokenRefreshView.as_view(), name='token_refresh'),
 ]
