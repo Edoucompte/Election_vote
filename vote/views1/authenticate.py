@@ -1,29 +1,47 @@
+from django.http import Http404
 from rest_framework.decorators import api_view, authentication_classes
 from rest_framework import response, status
-from encryption import createToken
+from encryption import createToken, checkPassword
 
-from vote.views1.user import CustomAuthentication
+from vote.models import CustomUser
+from vote.serializers import LoginSerializer
+from vote.views1 import CustomAuthentication
 
 @api_view(['POST'])
 #@authentication_classes()
 def login(request):
-    #sserializer pour email et password
+    #serializer pour email et password
+    serializer = LoginSerializer(request.data)
+    if(serializer.is_valid(raise_exception=True)):
+        # rechercher user par email
+        try:
+            user = CustomUser.objects.get_or_404(email=serializer.email)
+        except CustomUser.DoesNotExist:
+            raise Http404
 
-    # rechercher user par email
-
-    # checker son password
-
-    # generer les deux tokens par creationToken
-    
+        # checker son password
+        if(not checkPassword(serializer.password, user.password)):
+            return response.Response({
+                "details": "Email or password incorrect"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        return response.Response({
+            "access": createToken(user.id, user.email, 'secretKey', 6*60),
+            "refresh": createToken(user.id, user.email, 'secretKey', 1*24*60*60)
+        }, status=status.HTTP_200_OK)
     return response.Response({
-        "access": '',
-        "refresh": ''
-    }, status=status.HTTP_200_OK)
+            "details": "Email or password incorrect"
+        }, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST'])
 @authentication_classes(CustomAuthentication)
 def refresh(request):
-    return response.Response({
-        "refresh": request.auth
-    }, status=status.HTTP_200_OK)
+    authUser = request.user
+    if( authUser):
+        return response.Response({
+            "refresh": createToken(authUser.id, authUser.email, 1*24*60*60)
+        }, status=status.HTTP_200_OK)
+    return  response.Response({
+        "details": "Email or password incorrect"
+    }, status=status.HTTP_400_BAD_REQUEST)
