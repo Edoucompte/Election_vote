@@ -4,7 +4,7 @@ from rest_framework import response, status, authentication, exceptions
 from vote.serializers import CustomUserSerializer, UserModifySerializer
 from django.http import Http404
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
-from vote.encryption import decodeToken
+from vote.encryption import decodeToken, verifyTokenExpiration
 
 class CustomAuthentication(authentication.BasicAuthentication):
     def authenticate(self, request):
@@ -16,6 +16,8 @@ class CustomAuthentication(authentication.BasicAuthentication):
         #decrypter token jwt
         payload = decodeToken(token, "mon_secret")
         ## verifier expiration
+        if not verifyTokenExpiration(token):
+            return None
 
         # verifier le user
         try:
