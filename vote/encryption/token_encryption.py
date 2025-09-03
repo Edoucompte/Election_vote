@@ -16,3 +16,9 @@ def createToken(userId, email, secretKey, delay):
 
 def decodeToken(jwtToken, secretKey):
     return jwt.decode(jwtToken, secretKey, algorithm="HS256",  )#expiration
+
+def verifyTokenExpiration(token):
+    if 'exp' in token :
+        return datetime.now(tz=timezone.utc) - token.get('exp', ) > 0 
+    return False
+
