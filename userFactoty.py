@@ -12,3 +12,5 @@ for user in range(40):
         first_name= f"User first name{user}",
         last_name= f"User last name{user}"
     )
+
+#bulck_create()
