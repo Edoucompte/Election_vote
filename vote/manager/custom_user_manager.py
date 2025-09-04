@@ -8,7 +8,7 @@ class CustomUserManager(BaseUserManager):
         email = self.normalize_email(email)
         user = self.model(email=email, **extra_fileds)
         #user.set_password(password)
-        user['password'] = hashPassword(password)
+        user.password = hashPassword(password)
         user.save()
         return user
     
@@ -16,6 +16,8 @@ class CustomUserManager(BaseUserManager):
         extra_fileds.setdefault("is_staff", True)
         extra_fileds.setdefault("is_superuser", True)
         extra_fileds.setdefault("is_active", True)
+        extra_fileds.setdefault("is_supervisor", True)
+        #extra_fileds.setdefault("date_naissance", )
 
         if extra_fileds.get("is_staff") is not True:
             raise ValueError("Superuser must have is_staff to True")

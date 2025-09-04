@@ -16,7 +16,7 @@ class CustomUserModelViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter ]
     #filterset_class = UserFilter
-    filter_fields = ( 'is_active', 'is_superviseur', 'sexe')
+    filter_fields = ( 'is_active', 'is_supervisor', 'sex')
     search_fields = ('first_name', 'last_name', 'email')
     ordering_fields = ('first_name', )
    # authentication_classes = [SessionAuthentication]
