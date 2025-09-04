@@ -3,7 +3,7 @@ from django.db import models
 from vote.models.user import CustomUser
 from .election import Election
 
-class candidate(models.Model):
+class Candidate(models.Model):
     candidate = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='candidate')
     election = models.ForeignKey(Election, on_delete=models.CASCADE, related_name='election_candidature')
     date_candidature = models.DateField()
