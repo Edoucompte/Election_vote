@@ -1,4 +1,4 @@
-from .user import CustomUserDetailView, CustomUserView
+from .user import CustomUserDetailView, CustomUserView, CustomAuthentication
 #from .electeur import ProfilElecteurDetailView, ProfilElecteurView
 from .authenticate import *
 from .candidature import *

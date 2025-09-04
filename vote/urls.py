@@ -7,7 +7,7 @@ from vote.views1.vote import VoteDetailView, VoteView
 
 
 #from vote.views1 import CustomUserDetailView, CustomUserView, ProfilElecteurDetailView, ProfilElecteurView
-from . import views 
+#from . import views 
 
 from rest_framework import routers
 

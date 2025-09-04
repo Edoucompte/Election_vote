@@ -1,7 +1,7 @@
 from django.http import Http404
 from rest_framework.decorators import api_view, authentication_classes
 from rest_framework import response, status
-from encryption import createToken, checkPassword
+from vote.encryption import createToken, checkPassword
 
 from vote.models import CustomUser
 from vote.serializers import LoginSerializer
