@@ -1,7 +1,7 @@
 from rest_framework import serializers
-from vote.models import candidate
+from vote.models import Candidate
 
-class candidateSerializer(serializers.ModelSerializer):
+class CandidateSerializer(serializers.ModelSerializer):
     class Meta:
-        model = candidate
+        model = Candidate
         fields = '__all__'
