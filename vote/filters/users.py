@@ -6,5 +6,4 @@ class UserFilter(django_filters.FilterSet):
         model = CustomUser
         fields = {
             'first_name': ['icontains'],
-            'matricule': ['exact']
         }
