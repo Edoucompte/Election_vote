@@ -16,7 +16,7 @@ class CustomUserManager(BaseUserManager):
         extra_fileds.setdefault("is_staff", True)
         extra_fileds.setdefault("is_superuser", True)
         extra_fileds.setdefault("is_active", True)
-        extra_fileds.setdefault("is_superviseur", True)
+        extra_fileds.setdefault("is_supervisor", True)
         #extra_fileds.setdefault("date_naissance", )
 
         if extra_fileds.get("is_staff") is not True:
