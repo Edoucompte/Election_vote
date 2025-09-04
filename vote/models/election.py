@@ -13,7 +13,7 @@ class Election(models.Model):
     ], default='a_venir')
     supervisor = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='supervisor')
     electors = models.ManyToManyField(CustomUser, through="Vote", through_fields=('election', 'elector')) # cles etrangeres a preciser pour le vote
-    candidates = models.ManyToManyField(CustomUser, through="Candidature", related_name='candidates') 
+    candidates = models.ManyToManyField(CustomUser, through="Candidate", related_name='candidates') 
 
     def __str__(self):
         return f"{self.name} - start at {self.begin_date} end at {self.end_date} current state {self.state}"
