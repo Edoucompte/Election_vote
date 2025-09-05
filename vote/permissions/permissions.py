@@ -15,6 +15,6 @@ class IsSupervisorElection(permissions.BasePermission):
         return request.user.is_elector
     
 def has_object_permission(self, request, view, obj):
-        if request.user.is_supervisor :
+        if request.user.is_supervisor and obj.user == request.user:
             return True
         return False
