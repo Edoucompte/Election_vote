@@ -5,6 +5,7 @@ from vote.serializers import CustomUserSerializer
 from django.http import Http404
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from vote.encryption import decodeToken, verifyTokenExpiration
+from vote.permissions.permissions import IsSupervisor   
 
 class CustomAuthentication(authentication.BasicAuthentication):
     def authenticate(self, request):
@@ -29,7 +30,7 @@ class CustomAuthentication(authentication.BasicAuthentication):
 
 class CustomUserView(APIView):
     authentication_classes = [CustomAuthentication]
-    #permission_classes =[IsAuthenticatedOrReadOnly]
+    permission_classes =[IsSupervisor]
     def get(self, request, *args, **kwargs):
         users = CustomUser.objects.all()
         serializer = CustomUserSerializer(users, many=True)
@@ -50,10 +51,10 @@ class CustomUserView(APIView):
         return response.Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class CustomUserDetailView(APIView):
-    permission_classes =[IsAuthenticatedOrReadOnly]
+    permission_classes =[IsSupervisor]
     def get_object(self, pk):
         try:
-            return CustomUser.objects.get(pk=pk)
+            return CustomUser.objects.get(pk=pk)uthenticatedOrReadOnly
         except CustomUser.DoesNotExist:
             raise Http404
         
