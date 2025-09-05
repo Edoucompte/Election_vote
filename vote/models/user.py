@@ -18,9 +18,9 @@ class CustomUser(AbstractUser):
     ], default='M')
     birth_date = models.DateField(default=timezone.now())
     #matricule = models.PositiveBigIntegerField(default=random_matricule())
-    is_elector = models.BooleanField(default=False)
+    is_elector = models.BooleanField(default=True)
     is_supervisor = models.BooleanField(default=False)
-    is_candidate = models.BooleanField(default=False)
+    is_candidate = models.BooleanField(default=True)
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []

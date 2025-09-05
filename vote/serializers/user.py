@@ -8,10 +8,21 @@ class CustomUserSerializer(serializers.ModelSerializer):
         model = CustomUser
         #fields = ['id', 'first_name', 'last_name', 'email', 'sexe', 'date_joined', 'date_naissance', 'matricule', 'is_active', 'is_staff']
         exclude = ( "groups", 'user_permissions')
+    
+    def create(self, validated_data):
+        password = validated_data.pop('password')
+        user = CustomUser(**validated_data)
+        user['password'] = hashPassword(password) #.set_password(password)
+        user.save()
+        return user
+        
 
-        def create(self, validated_data):
-            password = validated_data.pop('password')
-            user = CustomUser(**validated_data)
-            user['password'] = hashPassword(password) #.set_password(password)
-            user.save()
-            return user
+    def update(self, instance, validated_data):
+        print("from update serialiswer", validated_data)
+        password = validated_data.pop('password')
+        if(password):
+            instance.password = hashPassword(password) #.set_password(password)
+        for key,value in validated_data.items():
+            setattr(instance, key, value)
+        instance.save()
+        return instance
