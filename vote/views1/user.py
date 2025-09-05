@@ -62,7 +62,7 @@ class CustomUserDetailView(APIView):
     
     def get_object(self, pk):
         try:
-            return CustomUser.objects.get(pk=pk)uthenticatedOrReadOnly
+            return CustomUser.objects.get(pk=pk) #uthenticatedOrReadOnly
         except CustomUser.DoesNotExist:
             raise Http404
         
