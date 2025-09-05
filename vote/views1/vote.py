@@ -44,7 +44,7 @@ class VoteDetailView(APIView):
 
     def put(self, request, pk, *args, **kwargs):
         Vote = self.get_object(pk)
-        serializer = VoteSerializer(Vote, data=request.data)
+        serializer = VoteSerializer(Vote, data=request.data, partial=True)
         if(serializer.is_valid):
             serializer.save()
             return response.Response(serializer.data, status=status.HTTP_200_OK)

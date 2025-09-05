@@ -46,7 +46,7 @@ class ElectionDetailView(APIView):
 
     def put(self, request, pk, *args, **kwargs):
         election = self.get_object(pk)
-        serializer = ElectionSerializer(election, data=request.data)
+        serializer = ElectionSerializer(election, data=request.data, partial=True)
         if(serializer.is_valid):
             serializer.save()
             return response.Response(serializer.data, status=status.HTTP_200_OK)

@@ -6,28 +6,29 @@ from vote.encryption import createToken, checkPassword
 from vote.models import CustomUser
 from vote.serializers import LoginSerializer
 from vote.views1 import CustomAuthentication
+import os
 
 @api_view(['POST'])
 #@authentication_classes()
 def login(request):
     #serializer pour email et password
-    serializer = LoginSerializer(request.data)
+    serializer = LoginSerializer(data=request.data)
     if(serializer.is_valid(raise_exception=True)):
         # rechercher user par email
         try:
-            user = CustomUser.objects.get_or_404(email=serializer.email)
+            user = CustomUser.objects.get(email=serializer.data["email"])
         except CustomUser.DoesNotExist:
             raise Http404
 
         # checker son password
-        if(not checkPassword(serializer.password, user.password)):
+        if(not checkPassword(serializer.data["password"], user.password)):
             return response.Response({
                 "details": "Email or password incorrect"
             }, status=status.HTTP_400_BAD_REQUEST)
         
         return response.Response({
-            "access": createToken(user.id, user.email, 'secretKey', 6*60),
-            "refresh": createToken(user.id, user.email, 'secretKey', 1*24*60*60)
+            "access": createToken(user.id, user.email, str(os.getenv('SECRET_KEY')), 6*60),
+            "refresh": createToken(user.id, user.email, str(os.getenv('SECRET_KEY')), 1*24*60*60)
         }, status=status.HTTP_200_OK)
     return response.Response({
             "details": "Email or password incorrect"
@@ -35,12 +36,12 @@ def login(request):
 
 
 @api_view(['POST'])
-@authentication_classes(CustomAuthentication)
+@authentication_classes([CustomAuthentication])
 def refresh(request):
     authUser = request.user
-    if( authUser):
+    if( authUser): # not isinstance(authUser, AnonymousUser)
         return response.Response({
-            "refresh": createToken(authUser.id, authUser.email, 1*24*60*60)
+            "refresh": createToken(authUser.id, authUser.email, str(os.getenv('SECRET_KEY')) , 1*24*60*60)
         }, status=status.HTTP_200_OK)
     return  response.Response({
         "details": "Email or password incorrect"

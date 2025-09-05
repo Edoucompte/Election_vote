@@ -1,12 +1,14 @@
 import jwt
+from jwt.exceptions import InvalidKeyError, ExpiredSignatureError
 from datetime import datetime, timedelta, timezone
 
 def createToken(userId, email, secretKey, delay):
     payload = {
-        "sub": userId, 
+        "sub": str(userId), 
         "email": email,
         "exp": datetime.now(tz=timezone.utc) + timedelta(seconds=delay)
     }
+
     return jwt.encode(
         payload,
         secretKey,
@@ -15,7 +17,15 @@ def createToken(userId, email, secretKey, delay):
     )
 
 def decodeToken(jwtToken, secretKey):
-    return jwt.decode(jwtToken, secretKey, algorithm="HS256",  )#expiration
+    token = jwtToken[7:]
+    try:
+        return jwt.decode(token, secretKey, algorithms=["HS256"] )#expiration
+    except InvalidKeyError:
+        raise ValueError('Invalid key')
+    except ExpiredSignatureError:
+        raise ValueError("token exprired")
+    except Exception as e:
+        raise ValueError(f"Invalid :")
 
 def verifyTokenExpiration(token):
     if 'exp' in token :

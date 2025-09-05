@@ -45,7 +45,7 @@ class CandidateDetailView(APIView):
                 {"error": "Candidature non trouvée"},
                 status=status.HTTP_404_NOT_FOUND
             )
-        serializer = CandidateSerializer(candidate, data=request.data)
+        serializer = CandidateSerializer(candidate, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return response.Response(serializer.data, status=status.HTTP_200_OK)
