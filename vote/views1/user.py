@@ -5,17 +5,21 @@ from vote.serializers import CustomUserSerializer
 from django.http import Http404
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from vote.encryption import decodeToken, verifyTokenExpiration
-from vote.permissions.permissions import IsSupervisor   
+from vote.permissions.permissions import IsSupervisor  
+import os
 
 class CustomAuthentication(authentication.BasicAuthentication):
     def authenticate(self, request):
-        #extraire le token di header
-        token = request.META.get('BEARER')
+        token = request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return None
         
         #decrypter token jwt
-        payload = decodeToken(token, "mon_secret")
+        secret = str(os.getenv('SECRET_KEY'))
+        try:
+            payload = decodeToken(token, secret)
+        except Exception as e:
+            raise exceptions.AuthenticationFailed("Invalid token")
         ## verifier expiration
         if not verifyTokenExpiration(token):
             return None
@@ -51,7 +55,11 @@ class CustomUserView(APIView):
         return response.Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class CustomUserDetailView(APIView):
+
+    authentication_classes = [CustomAuthentication]
     permission_classes =[IsSupervisor]
+    # permission_classes =[IsAuthenticatedOrReadOnly]
+    
     def get_object(self, pk):
         try:
             return CustomUser.objects.get(pk=pk)uthenticatedOrReadOnly
@@ -71,11 +79,10 @@ class CustomUserDetailView(APIView):
 
     def put(self, request, pk, *args, **kwargs):
         user = self.get_object(pk)
-        serializer = CustomUserSerializer(user, data=request.data)
-        if(serializer.is_valid):
+        serializer = CustomUserSerializer(user, data=request.data, partial=True)
+        if(serializer.is_valid(raise_exception=True)):
             serializer.save()
             return response.Response(serializer.data, status=status.HTTP_200_OK)
-        print(serializer.errors)
         return response.Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     def delete(self, request, pk, *args, **kwargs):
