@@ -1,7 +1,7 @@
 from vote.models import CustomUser
 from rest_framework.views import APIView
 from rest_framework import response, status, authentication, exceptions
-from vote.permissions.permissions import IsSupervisor
+from vote.permissions import IsSupervisor
 from vote.serializers import CustomUserSerializer
 from django.http import Http404
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
@@ -39,19 +39,25 @@ class CustomUserView(APIView):
         serializer = CustomUserSerializer(users, many=True)
         res = {
             "data": serializer.data,
-            "message": "Liste des utilisateurs",
-            "error": False
+            "details": "Liste des utilisateurs",
+            "succes": True
         }
         
         return response.Response(res, status=status.HTTP_200_OK)
     
     def post(self, request):
         serializer = CustomUserSerializer(data=request.data)
-        if(serializer.is_valid):
+        res = {
+            "details": "Creation utilisateur",
+        }
+        if(serializer.is_valid()):
             serializer.save()
-            return response.Response(serializer.data, status=status.HTTP_201_CREATED)
-        print(serializer.errors)
-        return response.Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            res['success'] = True
+            res['data'] = serializer.data
+            return response.Response(res, status=status.HTTP_201_CREATED)
+        res['success'] = False
+        res['data'] = serializer.errors
+        return response.Response(res, status=status.HTTP_400_BAD_REQUEST)
 
 class CustomUserDetailView(APIView):
 

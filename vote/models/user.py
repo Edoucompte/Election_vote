@@ -16,7 +16,7 @@ class CustomUser(AbstractUser):
         ('M', 'Masculin'),
         ('F', 'Feminin'),
     ], default='M')
-    birth_date = models.DateField(default=timezone.now())
+    birth_date = models.DateField(default=timezone.now().date())
     #matricule = models.PositiveBigIntegerField(default=random_matricule())
     is_elector = models.BooleanField(default=True)
     is_supervisor = models.BooleanField(default=False)
