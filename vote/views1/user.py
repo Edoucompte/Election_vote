@@ -1,11 +1,11 @@
 from vote.models import CustomUser
 from rest_framework.views import APIView
 from rest_framework import response, status, authentication, exceptions
+from vote.permissions.permissions import IsSupervisor
 from vote.serializers import CustomUserSerializer
 from django.http import Http404
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
-from vote.encryption import decodeToken, verifyTokenExpiration
-from vote.permissions.permissions import IsSupervisor  
+from vote.encryption import decodeToken
 import os
 
 class CustomAuthentication(authentication.BasicAuthentication):
@@ -18,15 +18,14 @@ class CustomAuthentication(authentication.BasicAuthentication):
         secret = str(os.getenv('SECRET_KEY'))
         try:
             payload = decodeToken(token, secret)
+            print(payload)
         except Exception as e:
             raise exceptions.AuthenticationFailed("Invalid token")
-        ## verifier expiration
-        if not verifyTokenExpiration(token):
-            return None
 
         # verifier le user
         try:
-            user = CustomUser.objects.get(id=payload.get('sub'), email=payload.get('email') )
+            user = CustomUser.objects.get(id=int(payload.get('sub')), email=payload.get('email') )
+            print(user)
         except CustomUser.DoesNotExist:
             raise exceptions.AuthenticationFailed('No such user')
 

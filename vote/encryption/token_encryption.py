@@ -27,8 +27,3 @@ def decodeToken(jwtToken, secretKey):
     except Exception as e:
         raise ValueError(f"Invalid :")
 
-def verifyTokenExpiration(token):
-    if 'exp' in token :
-        return datetime.now(tz=timezone.utc) - token.get('exp', ) > 0 
-    return False
-

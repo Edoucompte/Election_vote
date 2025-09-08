@@ -1,14 +1,14 @@
 from rest_framework import permissions
 
 
-class IsSuperviseur (permissions.BasePermission):
+class IsSupervisor (permissions.BasePermission):
 
     def has_permission(self, request, view):
-        if request.user.is_supervise:
+        if request.user.is_supervisor:
             return True
         return False
 
     def has_object_permission(self, request, view, obj):
-        if obj.superviseur == request.user:
+        if obj.supervisor == request.user:
             return True
         return False 

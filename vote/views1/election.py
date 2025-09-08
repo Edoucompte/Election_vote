@@ -3,10 +3,10 @@ from rest_framework import response, status
 from vote.models import Election
 from vote.serializers import ElectionSerializer
 from django.http import Http404
-from vote.permissions import IsSuperviseur
+from vote.permissions import IsSupervisor
 
 class ElectionView(APIView):
-    permission_classes = [ IsSuperviseur ]
+    permission_classes = [ IsSupervisor ]
     def get(self, request, *args, **kwargs):
         elections = Election.objects.all()
         serializer = ElectionSerializer(elections, many=True)
