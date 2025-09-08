@@ -4,7 +4,7 @@ from rest_framework import response, status, authentication, exceptions
 from vote.permissions.permissions import IsSupervisor
 from vote.serializers import CustomUserSerializer
 from django.http import Http404
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from vote.encryption import decodeToken
 import os
 
@@ -33,7 +33,7 @@ class CustomAuthentication(authentication.BasicAuthentication):
 
 class CustomUserView(APIView):
     authentication_classes = [CustomAuthentication, IsAuthenticated]
-    permission_classes =[IsSupervisor]
+    permission_classes = [IsAdminUser] # [IsSupervisor]
     def get(self, request, *args, **kwargs):
         users = CustomUser.objects.all()
         serializer = CustomUserSerializer(users, many=True)
@@ -56,7 +56,7 @@ class CustomUserView(APIView):
 class CustomUserDetailView(APIView):
 
     authentication_classes = [CustomAuthentication]
-    permission_classes =[IsSupervisor]
+    permission_classes = [IsAdminUser] # [IsSupervisor]
     # permission_classes =[IsAuthenticatedOrReadOnly]
     
     def get_object(self, pk):
