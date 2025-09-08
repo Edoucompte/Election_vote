@@ -4,7 +4,7 @@ from rest_framework import response, status, authentication, exceptions
 from vote.permissions.permissions import IsSupervisor
 from vote.serializers import CustomUserSerializer
 from django.http import Http404
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticated
 from vote.encryption import decodeToken
 import os
 
@@ -32,7 +32,7 @@ class CustomAuthentication(authentication.BasicAuthentication):
         return (user, token)
 
 class CustomUserView(APIView):
-    authentication_classes = [CustomAuthentication]
+    authentication_classes = [CustomAuthentication, IsAuthenticated]
     permission_classes =[IsSupervisor]
     def get(self, request, *args, **kwargs):
         users = CustomUser.objects.all()
