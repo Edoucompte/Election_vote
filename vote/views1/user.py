@@ -10,7 +10,8 @@ import os
 
 class CustomAuthentication(authentication.BasicAuthentication):
     def authenticate(self, request):
-        token = request.META.get('HTTP_AUTHORIZATION')
+        #extraire le token di header
+        token = request.META.get('BEARER')
         if not token:
             return None
         
@@ -64,10 +65,10 @@ class CustomUserDetailView(APIView):
     authentication_classes = [CustomAuthentication]
     permission_classes = [IsAdminUser] # [IsSupervisor]
     # permission_classes =[IsAuthenticatedOrReadOnly]
-    
+
     def get_object(self, pk):
         try:
-            return CustomUser.objects.get(pk=pk) #uthenticatedOrReadOnly
+            return CustomUser.objects.get(pk=pk)
         except CustomUser.DoesNotExist:
             raise Http404
         
@@ -84,10 +85,11 @@ class CustomUserDetailView(APIView):
 
     def put(self, request, pk, *args, **kwargs):
         user = self.get_object(pk)
-        serializer = CustomUserSerializer(user, data=request.data, partial=True)
-        if(serializer.is_valid(raise_exception=True)):
+        serializer = CustomUserSerializer(user, data=request.data)
+        if(serializer.is_valid):
             serializer.save()
             return response.Response(serializer.data, status=status.HTTP_200_OK)
+        print(serializer.errors)
         return response.Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     def delete(self, request, pk, *args, **kwargs):
