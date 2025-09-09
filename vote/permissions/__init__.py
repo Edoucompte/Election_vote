@@ -1,1 +1,1 @@
-from .permissions import IsSuperviseur
+from .permissions import IsSupervisor

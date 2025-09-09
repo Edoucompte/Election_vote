@@ -1,11 +1,12 @@
 from vote.models import CustomUser
 from rest_framework.views import APIView
 from rest_framework import response, status, authentication, exceptions
+from vote.permissions import IsSupervisor
 from vote.serializers import CustomUserSerializer
 from django.http import Http404
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
-from vote.encryption import decodeToken, verifyTokenExpiration
-from vote.permissions.permissions import IsSupervisor   
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from vote.encryption import decodeToken
+import os
 
 class CustomAuthentication(authentication.BasicAuthentication):
     def authenticate(self, request):
@@ -15,43 +16,56 @@ class CustomAuthentication(authentication.BasicAuthentication):
             return None
         
         #decrypter token jwt
-        payload = decodeToken(token, "mon_secret")
-        ## verifier expiration
-        if not verifyTokenExpiration(token):
-            return None
+        secret = str(os.getenv('SECRET_KEY'))
+        try:
+            payload = decodeToken(token, secret)
+            print(payload)
+        except Exception as e:
+            raise exceptions.AuthenticationFailed("Invalid token")
 
         # verifier le user
         try:
-            user = CustomUser.objects.get(id=payload.get('sub'), email=payload.get('email') )
+            user = CustomUser.objects.get(id=int(payload.get('sub')), email=payload.get('email') )
+            print(user)
         except CustomUser.DoesNotExist:
             raise exceptions.AuthenticationFailed('No such user')
 
         return (user, token)
 
 class CustomUserView(APIView):
-    authentication_classes = [CustomAuthentication]
-    permission_classes =[IsSupervisor]
+    authentication_classes = [CustomAuthentication, IsAuthenticated]
+    permission_classes = [IsAdminUser] # [IsSupervisor]
     def get(self, request, *args, **kwargs):
         users = CustomUser.objects.all()
         serializer = CustomUserSerializer(users, many=True)
         res = {
             "data": serializer.data,
-            "message": "Liste des utilisateurs",
-            "error": False
+            "details": "Liste des utilisateurs",
+            "succes": True
         }
         
         return response.Response(res, status=status.HTTP_200_OK)
     
     def post(self, request):
         serializer = CustomUserSerializer(data=request.data)
-        if(serializer.is_valid):
+        res = {
+            "details": "Creation utilisateur",
+        }
+        if(serializer.is_valid()):
             serializer.save()
-            return response.Response(serializer.data, status=status.HTTP_201_CREATED)
-        print(serializer.errors)
-        return response.Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            res['success'] = True
+            res['data'] = serializer.data
+            return response.Response(res, status=status.HTTP_201_CREATED)
+        res['success'] = False
+        res['data'] = serializer.errors
+        return response.Response(res, status=status.HTTP_400_BAD_REQUEST)
 
 class CustomUserDetailView(APIView):
-    permission_classes =[IsSupervisor]
+
+    authentication_classes = [CustomAuthentication]
+    permission_classes = [IsAdminUser] # [IsSupervisor]
+    # permission_classes =[IsAuthenticatedOrReadOnly]
+
     def get_object(self, pk):
         try:
             return CustomUser.objects.get(pk=pk)

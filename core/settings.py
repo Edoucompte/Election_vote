@@ -87,8 +87,8 @@ DATABASES = {
         #'USER': str(os.getenv('DJANGO_DB_NAME')),
         #'HOST': str(os.getenv('DJANGO_DB_USER')),
         #'PORT': str(os.getenv('DJANGO_DB_PORT')),
-        'ENGINE': 'django.db.backends.sqlite3', # str(os.getenv('DJANGO_DB_ENGINE')), 
-        'NAME': BASE_DIR / 'db.sqlite3',  #str(os.getenv('DJANGO_DB_ENGINE')), #
+        # 'ENGINE': 'django.db.backends.sqlite3', # str(os.getenv('DJANGO_DB_ENGINE')), 
+        # 'NAME': BASE_DIR / 'db.sqlite3',  #str(os.getenv('DJANGO_DB_ENGINE')), #
         #'USER': str(os.getenv('DJANGO_DB_NAME')),
         #'HOST': str(os.getenv('DJANGO_DB_USER')),
         #'PORT': str(os.getenv('DJANGO_DB_PORT')),
@@ -156,6 +156,15 @@ REST_FRAMEWORK = {
         #'rest_framework.permissions.AllowAny',
         #'rest_framework.permissions.IsAuthenticated',
     ]
+}
+
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        'Bearer' :{
+            'type' : '',
+            'name' : 'Authorization'
+        }
+    }
 }
 
 AUTH_USER_MODEL = "vote.CustomUser"

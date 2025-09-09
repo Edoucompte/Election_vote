@@ -8,6 +8,11 @@ class IsSupervisor(permissions.BasePermission):
             return True
         return False
 
+    def has_object_permission(self, request, view, obj):
+        if obj.supervisor == request.user:
+            return True
+        return False
+             
 class IsSupervisorElection(permissions.BasePermission):
     def has_permission(self, request, view):
         if request.method == 'GET' :
