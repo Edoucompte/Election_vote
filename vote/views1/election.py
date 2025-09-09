@@ -27,7 +27,7 @@ class ElectionView(APIView):
         return response.Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class ElectionDetailView(APIView):
-    permission_classes = [ IsSuperviseur ]
+    permission_classes = [ IsSupervisor ]
     def get_object(self, pk):
         try:
             return Election.objects.get(pk=pk)
