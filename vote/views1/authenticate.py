@@ -5,8 +5,9 @@ from vote.encryption import createToken, checkPassword
 
 from vote.models import CustomUser
 from vote.serializers import LoginSerializer
-from vote.views1 import CustomAuthentication
 import os
+
+from vote.views1.user import CustomAuthentication
 
 @api_view(['POST'])
 #@authentication_classes()
