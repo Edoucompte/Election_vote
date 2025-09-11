@@ -23,14 +23,12 @@ urlpatterns = [
     #path('votes/', views.votes)
     #path('', include(router.urls)),
 
-    path('v2/users/', CustomUserView.as_view()),
-    path('v2/users/<int:pk>/', CustomUserDetailView.as_view()),
-    path('v2/elections/', ElectionView.as_view()),
-    path('v2/elections/<int:pk>/', ElectionDetailView.as_view()),
-    path('v2/candidatures/', CandidateView.as_view()),
-    path('v2/candidatures/<int:pk>/', CandidateDetailView.as_view()),
-    path('v2/votes/', VoteView.as_view()),
-    path('v2/votes/<int:pk>/', VoteDetailView.as_view()),
-    
-
+    path('users/', CustomUserView.as_view(), name='User view'),
+    path('users/<int:pk>/', CustomUserDetailView.as_view(), name='User detail view'),
+    path('elections/', ElectionView.as_view()),
+    path('elections/<int:pk>/', ElectionDetailView.as_view()),
+    path('candidatures/', CandidateView.as_view()),
+    path('candidatures/<int:pk>/', CandidateDetailView.as_view()),
+    path('votes/', VoteView.as_view()),
+    path('votes/<int:pk>/', VoteDetailView.as_view()),
 ]

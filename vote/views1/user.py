@@ -7,6 +7,14 @@ from django.http import Http404
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from vote.encryption import decodeToken
 import os
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+
+res = {
+    200: " Success ",
+    401: "Unauthenticated",
+    403: "Access denied"
+}
 
 class CustomAuthentication(authentication.BasicAuthentication):
     def authenticate(self, request):
@@ -26,30 +34,45 @@ class CustomAuthentication(authentication.BasicAuthentication):
         # verifier le user
         try:
             user = CustomUser.objects.get(id=int(payload.get('sub')), email=payload.get('email') )
-            print(user)
         except CustomUser.DoesNotExist:
             raise exceptions.AuthenticationFailed('No such user')
 
         return (user, token)
 
 class CustomUserView(APIView):
-    authentication_classes = [CustomAuthentication, IsAuthenticated]
-    permission_classes = [IsAdminUser] # [IsSupervisor]
-    def get(self, request, *args, **kwargs):
-        users = CustomUser.objects.all()
-        serializer = CustomUserSerializer(users, many=True)
-        res = {
-            "data": serializer.data,
-            "details": "Liste des utilisateurs",
-            "succes": True
-        }
-        
-        return response.Response(res, status=status.HTTP_200_OK)
+    '''
+        Users View
+    '''
+    authentication_classes = [CustomAuthentication]
+    #permission_classes = [IsAuthenticated] # [IsSupervisor]
     
+    @swagger_auto_schema(
+        operation_description="Returns users list",
+        responses=res
+    )
+    def get(self, request, *args, **kwargs):
+        if(request.user.has_perm('view_cutomuser')):
+            users = CustomUser.objects.all()
+            serializer = CustomUserSerializer(users, many=True)
+            return response.Response({
+                "data": serializer.data,
+                "details": "Liste des utilisateurs",
+                "succes": True
+            }, status=status.HTTP_200_OK)
+        return response.Response({
+            "details": "Access denied",
+            "succes": False
+        }, status=status.HTTP_403_FORBIDDEN)
+    
+    @swagger_auto_schema(
+        operation_description="Returns users list",
+        request_body=CustomUserSerializer,
+        responses=res
+    )
     def post(self, request):
-        serializer = CustomUserSerializer(data=request.data)
+        serializer = CustomUserSerializer(data=request.data, many=True)
         res = {
-            "details": "Creation utilisateur",
+            "details": "Creation d'utilisateurs",
         }
         if(serializer.is_valid()):
             serializer.save()
@@ -61,17 +84,25 @@ class CustomUserView(APIView):
         return response.Response(res, status=status.HTTP_400_BAD_REQUEST)
 
 class CustomUserDetailView(APIView):
+    '''
+        Users View
+    '''
 
     authentication_classes = [CustomAuthentication]
     permission_classes = [IsAdminUser] # [IsSupervisor]
     # permission_classes =[IsAuthenticatedOrReadOnly]
+
 
     def get_object(self, pk):
         try:
             return CustomUser.objects.get(pk=pk)
         except CustomUser.DoesNotExist:
             raise Http404
-        
+    
+    @swagger_auto_schema(
+        operation_description="Returns users list",
+        responses=res
+    ) 
     def get(self, request, pk):
         user = self.get_object(pk)
         serializer = CustomUserSerializer(user)
@@ -83,6 +114,11 @@ class CustomUserDetailView(APIView):
         
         return response.Response(res, status=status.HTTP_200_OK)
 
+    @swagger_auto_schema(
+        operation_description="Returns users list",
+        request_body=CustomUserSerializer,
+        responses= res
+    )
     def put(self, request, pk, *args, **kwargs):
         user = self.get_object(pk)
         serializer = CustomUserSerializer(user, data=request.data)
@@ -92,6 +128,14 @@ class CustomUserDetailView(APIView):
         print(serializer.errors)
         return response.Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
+    @swagger_auto_schema(
+        operation_description="Returns users list",
+        responses={
+            204:'no contente',
+            401: 'Unauthenticated',
+            403: 'Access denied'
+        }
+    )
     def delete(self, request, pk, *args, **kwargs):
         user = self.get_object(pk)
         user.delete()

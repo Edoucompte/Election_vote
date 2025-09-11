@@ -2,12 +2,13 @@ from django.contrib import admin
 from django.urls import path, include
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view as swagger_get_schema_view
-from rest_framework_simplejwt.views import (
-    TokenObtainPairView, 
-    TokenRefreshView,
-)
+from rest_framework.routers import DefaultRouter
+# from rest_framework_simplejwt.views import (
+#     TokenObtainPairView, 
+#     TokenRefreshView,
+# )
 
-from vote.views1 import login, refresh
+from vote.views1 import ConnexionView
 
 schema_view = swagger_get_schema_view(
     openapi.Info(
@@ -18,6 +19,9 @@ schema_view = swagger_get_schema_view(
         public=True
     )
 
+router = DefaultRouter()
+router.register('auth', ConnexionView, basename='Connexion')
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -27,15 +31,17 @@ urlpatterns = [
     #path('vote/', include('vote.urls')),
 
     # API Endpoints
-    path('api/', include([
-        path('', include('vote.urls')),
-        path('swagger/schema', schema_view.with_ui('swagger', cache_timeout=0), name='swagger-schema')
-        ])
+    path('api/v1/', 
+        include([
+            path('', include('vote.urls')),
+            path('', include(router.urls))
+        ]),
     ),
+    path('swagger/schema', schema_view.with_ui('swagger', cache_timeout=0), name='swagger-schema'),
 
     #auth routes
-    path('api/token/', login, name='token_obtain_pair'),
-    path('api/token/refresh/', refresh, name='token_refresh'),
+    #path('api/token/', ConnexionView.as_view(), name='token_obtain_pair'),
+    #path('api/token/refresh/', refresh, name='token_refresh'),
     #path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     #path('api/token/refresh', TokenRefreshView.as_view(), name='token_refresh'),
 ]
