@@ -19,7 +19,7 @@ res = {
 
 class CustomAuthentication(authentication.BasicAuthentication):
     def authenticate(self, request):
-        #extraire le token di header
+        #extraire le token du header
         token = request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return None
@@ -28,12 +28,14 @@ class CustomAuthentication(authentication.BasicAuthentication):
         secret = str(os.getenv('SECRET_KEY'))
         try:
             payload = decodeToken(token, secret)
+            # print(payload)
         except Exception as e:
             raise exceptions.AuthenticationFailed("Invalid token")
 
         # verifier le user
         try:
             user = CustomUser.objects.get(id=int(payload.get('sub')), email=payload.get('email') )
+            print(user)
         except CustomUser.DoesNotExist:
             raise exceptions.AuthenticationFailed('No such user')
 
@@ -50,14 +52,14 @@ class CustomUserView(APIView):
     )
     def get(self, request, *args, **kwargs):
 
-        if request.user.is_authenticate and  request.user.has_perm('vote.view_cutomuser'):
+        if request.user.is_authenticated and  request.user.has_perm('vote.view_cutomuser'):
             users = CustomUser.objects.all()
             paginator =PageNumberPagination()
             paginator_queryset = paginator.paginate_queryset(users, request)
             serializer = CustomUserSerializer(paginator_queryset, many=True)
-            print("results", paginator.get_results(serializer.data))
+            # print("results", paginator.get_results(serializer.validated_data))
             return response.Response({
-                "data": CustomPaginator.format_json_response(paginator, serializer.data), # , serializer.data
+                "data": CustomPaginator.format_json_response(paginator, serializer.validated_data), # , serializer.validated_data
                 "details": "Liste des utilisateurs",
                 "succes": True
             }, status=status.HTTP_200_OK)
@@ -79,7 +81,7 @@ class CustomUserView(APIView):
         if(serializer.is_valid()):
             serializer.save()
             res['success'] = True
-            res['data'] = serializer.data
+            res['data'] = serializer.validated_data
             return response.Response(res, status=status.HTTP_201_CREATED)
         res['success'] = False
         res['data'] = serializer.errors
@@ -110,7 +112,7 @@ class CustomUserDetailView(APIView):
             user = self.get_object(pk)
             serializer = CustomUserSerializer(user)
             res = {
-                "data": serializer.data,
+                "data": serializer.validated_data,
                 "message": f"Utilisateur id {pk}",
                 "error": False
             }
@@ -131,7 +133,7 @@ class CustomUserDetailView(APIView):
         serializer = CustomUserSerializer(user, data=request.data)
         if(serializer.is_valid):
             serializer.save()
-            return response.Response(serializer.data, status=status.HTTP_200_OK)
+            return response.Response(serializer.validated_data, status=status.HTTP_200_OK)
         print(serializer.errors)
         return response.Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     

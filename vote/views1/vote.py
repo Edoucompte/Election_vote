@@ -16,7 +16,7 @@ class VoteView(APIView):
     #     votes = Vote.objects.all()
     #     serializer = VoteSerializer(votes, many=True)
     #     responserJson = {
-    #         "data": serializer.data,
+    #         "data": serializer.validated_data,
     #         "message": "Liste des votes",
     #         "error": False
     #     }
@@ -28,11 +28,11 @@ class VoteView(APIView):
         request_body=VoteSerializer,
         responses= res
     )
-    def post(self, request):
+    def post(self, request, election_id):
         serializer = VoteSerializer(data=request.data)
         if(serializer.is_valid):
             serializer.save()
-            return response.Response(serializer.data, status=status.HTTP_201_CREATED)
+            return response.Response(serializer.validated_data, status=status.HTTP_201_CREATED)
         print(serializer.errors)
         return response.Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -51,7 +51,7 @@ class VoteDetailView(APIView):
     #     Vote = self.get_object(pk)
     #     serializer = VoteSerializer(Vote)
     #     res = {
-    #         "data": serializer.data,
+    #         "data": serializer.validated_data,
     #         "message": f"Vote id {pk}",
     #         "error": False
     #     }
@@ -68,7 +68,7 @@ class VoteDetailView(APIView):
     #     serializer = VoteSerializer(Vote, data=request.data, partial=True)
     #     if(serializer.is_valid):
     #         serializer.save()
-    #         return response.Response(serializer.data, status=status.HTTP_200_OK)
+    #         return response.Response(serializer.validated_data, status=status.HTTP_200_OK)
     #     print(serializer.errors)
     #     return response.Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
