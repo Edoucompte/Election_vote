@@ -19,7 +19,7 @@ class CandidateView(APIView):
     def get(self, request):
         candidate = candidate.objects.all()
         serializer = CandidateSerializer(candidate, many=True)
-        return response.Response(serializer.validated_data, status=status.HTTP_200_OK)
+        return response.Response(serializer.data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
         operation_description="Create new candidature",
@@ -30,7 +30,7 @@ class CandidateView(APIView):
         serializer = CandidateSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return response.Response(serializer.validated_data, status=status.HTTP_201_CREATED)
+            return response.Response(serializer.data, status=status.HTTP_201_CREATED)
         return response.Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class CandidateDetailView(APIView):
@@ -52,7 +52,7 @@ class CandidateDetailView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
         serializer = CandidateSerializer(candidate)
-        return response.Response(serializer.validated_data, status=status.HTTP_200_OK)
+        return response.Response(serializer.data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
         operation_description="Modify a single candidature details",
@@ -69,7 +69,7 @@ class CandidateDetailView(APIView):
         serializer = CandidateSerializer(candidate, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
-            return response.Response(serializer.validated_data, status=status.HTTP_200_OK)
+            return response.Response(serializer.data, status=status.HTTP_200_OK)
         return response.Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     @swagger_auto_schema(
