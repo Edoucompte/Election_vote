@@ -30,5 +30,5 @@ urlpatterns = [
     path('candidatures/', CandidateView.as_view()),
     path('candidatures/<int:pk>/', CandidateDetailView.as_view()),
     path('votes/', VoteView.as_view()),
-    path('votes/<int:pk>/', VoteDetailView.as_view()),
+    #path('votes/<int:pk>/', VoteDetailView.as_view()),
 ]
