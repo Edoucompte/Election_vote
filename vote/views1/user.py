@@ -1,10 +1,11 @@
 from vote.models import CustomUser
 from rest_framework.views import APIView
+from vote.paginations import CustomPaginator
+from rest_framework.pagination import PageNumberPagination
 from rest_framework import response, status, authentication, exceptions
 from vote.permissions import IsSupervisor
 from vote.serializers import CustomUserSerializer
 from django.http import Http404
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from vote.encryption import decodeToken
 import os
 from drf_yasg.utils import swagger_auto_schema
@@ -19,7 +20,7 @@ res = {
 class CustomAuthentication(authentication.BasicAuthentication):
     def authenticate(self, request):
         #extraire le token di header
-        token = request.META.get('BEARER')
+        token = request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return None
         
@@ -27,7 +28,6 @@ class CustomAuthentication(authentication.BasicAuthentication):
         secret = str(os.getenv('SECRET_KEY'))
         try:
             payload = decodeToken(token, secret)
-            print(payload)
         except Exception as e:
             raise exceptions.AuthenticationFailed("Invalid token")
 
@@ -40,9 +40,7 @@ class CustomAuthentication(authentication.BasicAuthentication):
         return (user, token)
 
 class CustomUserView(APIView):
-    '''
-        Users View
-    '''
+
     authentication_classes = [CustomAuthentication]
     #permission_classes = [IsAuthenticated] # [IsSupervisor]
     
@@ -51,11 +49,15 @@ class CustomUserView(APIView):
         responses=res
     )
     def get(self, request, *args, **kwargs):
-        if(request.user.has_perm('view_cutomuser')):
+
+        if request.user.is_authenticate and  request.user.has_perm('vote.view_cutomuser'):
             users = CustomUser.objects.all()
-            serializer = CustomUserSerializer(users, many=True)
+            paginator =PageNumberPagination()
+            paginator_queryset = paginator.paginate_queryset(users, request)
+            serializer = CustomUserSerializer(paginator_queryset, many=True)
+            print("results", paginator.get_results(serializer.data))
             return response.Response({
-                "data": serializer.data,
+                "data": CustomPaginator.format_json_response(paginator, serializer.data), # , serializer.data
                 "details": "Liste des utilisateurs",
                 "succes": True
             }, status=status.HTTP_200_OK)
@@ -89,7 +91,7 @@ class CustomUserDetailView(APIView):
     '''
 
     authentication_classes = [CustomAuthentication]
-    permission_classes = [IsAdminUser] # [IsSupervisor]
+    # permission_classes = [IsAdminUser] # [IsSupervisor]
     # permission_classes =[IsAuthenticatedOrReadOnly]
 
 
@@ -104,15 +106,20 @@ class CustomUserDetailView(APIView):
         responses=res
     ) 
     def get(self, request, pk):
-        user = self.get_object(pk)
-        serializer = CustomUserSerializer(user)
-        res = {
-            "data": serializer.data,
-            "message": f"Utilisateur id {pk}",
-            "error": False
-        }
-        
-        return response.Response(res, status=status.HTTP_200_OK)
+        if(request.user.is_authenticated and request.user.has_perm('vote.view_customuser')):
+            user = self.get_object(pk)
+            serializer = CustomUserSerializer(user)
+            res = {
+                "data": serializer.data,
+                "message": f"Utilisateur id {pk}",
+                "error": False
+            }
+            
+            return response.Response(res, status=status.HTTP_200_OK)
+        return response.Response({
+            "details": "Access denied",
+            "succes": False
+        }, status=status.HTTP_403_FORBIDDEN)
 
     @swagger_auto_schema(
         operation_description="Returns users list",
