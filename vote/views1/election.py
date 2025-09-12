@@ -39,12 +39,21 @@ class ElectionView(APIView):
     
     @swagger_auto_schema(
         operation_description="Create new election",
-        request_body=ElectionSerializer,
+        request_body=openapi.Schema(
+            description="Request body for election creation",
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'name': openapi.Schema(type=openapi.TYPE_STRING, description="name"),
+                'begin_date': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME, description="begin date timestamp"),
+                'end_date': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME, description="end date timestamp"),
+                # 'state': openapi.Schema(type=openapi.TYPE_STRING, description="state"),
+            },
+        ),
         responses= res
     )
     def post(self, request):
         serializer = ElectionSerializer(data=request.data)
-        if(serializer.is_valid):
+        if(serializer.is_valid()):
             serializer.save()
             return response.Response(serializer.validated_data, status=status.HTTP_201_CREATED)
         print(serializer.errors)
@@ -81,7 +90,7 @@ class ElectionDetailView(APIView):
     def put(self, request, pk, *args, **kwargs):
         election = self.get_object(pk)
         serializer = ElectionSerializer(election, data=request.data, partial=True)
-        if(serializer.is_valid):
+        if(serializer.is_valid()):
             serializer.save()
             return response.Response(serializer.validated_data, status=status.HTTP_200_OK)
         print(serializer.errors)
