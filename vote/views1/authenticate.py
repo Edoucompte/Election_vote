@@ -82,12 +82,10 @@ class ConnexionView(viewsets.ViewSet):
     #@authentication_classes([CustomAuthentication])
     def refresh(self, request):
         authUser = request.user
-        if( authUser): # not isinstance(authUser, AnonymousUser)
+        if( authUser.is_authenticated): # not isinstance(authUser, AnonymousUser)
             return response.Response({
                 "refresh": createToken(authUser.id, authUser.email, str(os.getenv('SECRET_KEY')) , 1*24*60*60)
             }, status=status.HTTP_200_OK)
         return  response.Response({
             "details": "Email or password incorrect"
         }, status=status.HTTP_400_BAD_REQUEST)
-
-    
