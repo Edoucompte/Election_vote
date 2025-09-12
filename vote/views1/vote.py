@@ -30,7 +30,7 @@ class VoteView(APIView):
     )
     def post(self, request, election_id):
         serializer = VoteSerializer(data=request.data)
-        if(serializer.is_valid):
+        if(serializer.is_valid()):
             serializer.save()
             return response.Response(serializer.validated_data, status=status.HTTP_201_CREATED)
         print(serializer.errors)
@@ -66,7 +66,7 @@ class VoteDetailView(APIView):
     # def put(self, request, pk, *args, **kwargs):
     #     Vote = self.get_object(pk)
     #     serializer = VoteSerializer(Vote, data=request.data, partial=True)
-    #     if(serializer.is_valid):
+    #     if(serializer.is_valid()):
     #         serializer.save()
     #         return response.Response(serializer.validated_data, status=status.HTTP_200_OK)
     #     print(serializer.errors)

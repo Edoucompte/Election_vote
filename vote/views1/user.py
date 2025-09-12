@@ -131,7 +131,7 @@ class CustomUserDetailView(APIView):
     def put(self, request, pk, *args, **kwargs):
         user = self.get_object(pk)
         serializer = CustomUserSerializer(user, data=request.data)
-        if(serializer.is_valid):
+        if(serializer.is_valid()):
             serializer.save()
             return response.Response(serializer.validated_data, status=status.HTTP_200_OK)
         print(serializer.errors)
