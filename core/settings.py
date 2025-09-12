@@ -14,6 +14,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 load_dotenv()
 import os
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -149,12 +150,12 @@ REST_FRAMEWORK = {
         'rest_framework.filters.OrderingFilter'
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
+        #'rest_framework_simplejwt.authentication.JWTAuthentication',
+        #'rest_framework.authentication.SessionAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        #'rest_framework.permissions.AllowAny',
-        #'rest_framework.permissions.IsAuthenticated',
+        # 'rest_framework.permissions.AllowAny',
+        # 'rest_framework.permissions.IsAuthenticated',
     ]
 }
 
@@ -168,6 +169,13 @@ SWAGGER_SETTINGS = {
         }
     }
 }
+
+SIMPLE_JWT = {
+        "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),  # Set access token to expire in 60 minutes
+        "REFRESH_TOKEN_LIFETIME": timedelta(days=1),   # Set refresh token to expire in 7 days
+        "ROTATE_REFRESH_TOKENS": True,                 # Optional: Rotate refresh tokens on use
+        "BLACKLIST_AFTER_ROTATION": True,              # Optional: Blacklist old refresh tokens
+    }
 
 AUTH_USER_MODEL = "vote.CustomUser"
 
