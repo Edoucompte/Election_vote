@@ -63,7 +63,7 @@ class ConnexionView(viewsets.ViewSet):
                 }, status=status.HTTP_400_BAD_REQUEST)
             
             return response.Response({
-                "access": createToken(user.id, user.email, str(os.getenv('SECRET_KEY')), 6*60),
+                "access": createToken(user.id, user.email, str(os.getenv('SECRET_KEY')), 60*60),
                 "refresh": createToken(user.id, user.email, str(os.getenv('SECRET_KEY')), 1*24*60*60)
             }, status=status.HTTP_200_OK)
         return response.Response({
@@ -71,20 +71,24 @@ class ConnexionView(viewsets.ViewSet):
             }, status=status.HTTP_400_BAD_REQUEST)
 
     @swagger_auto_schema(
-    operation_description="Resfreh an token for auth",
-    request_body=openapi.Schema(
-        title="resfresh",
-        type=openapi.TYPE_STRING,
-        # property='refresh': openapi.Schema(type=openapi.TYPE_STRING, descripton: "Refresh token")
+        operation_description="Resfreh an token for auth",
+        # request_body=openapi.Schema(
+        #     title="resfresh",
+        #     type=openapi.TYPE_STRING,
+        #     # property='refresh': openapi.Schema(type=openapi.TYPE_STRING, descripton: "Refresh token")
+        # ),
+        responses={
+            200: "access token",
+            400: "Bad request"
+        }  
     )
-    )
-    @action(detail=False, methods=['POST'],)
+    @action(detail=False, methods=['POST'], authentication_classes=[CustomAuthentication])
     #@authentication_classes([CustomAuthentication])
     def refresh(self, request):
         authUser = request.user
         if( authUser.is_authenticated): # not isinstance(authUser, AnonymousUser)
             return response.Response({
-                "refresh": createToken(authUser.id, authUser.email, str(os.getenv('SECRET_KEY')) , 1*24*60*60)
+                "access": createToken(authUser.id, authUser.email, str(os.getenv('SECRET_KEY')) , 60*60)
             }, status=status.HTTP_200_OK)
         return  response.Response({
             "details": "Email or password incorrect"
