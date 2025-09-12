@@ -24,9 +24,9 @@ class ElectionView(APIView):
             paginator =PageNumberPagination()
             paginator_queryset = paginator.paginate_queryset(elections, request)
             serializer = ElectionSerializer(paginator_queryset, many=True)
-            # print("results", paginator.get_results(serializer.validated_data))
+            # print("results", paginator.get_results(serializer.data))
             return response.Response({
-                "data": CustomPaginator.format_json_response(paginator, serializer.validated_data), # , serializer.validated_data
+                "data": CustomPaginator.format_json_response(paginator, serializer.data), # , serializer.data
                 "details": "Liste des elections",
                 "succes": True
             }, status=status.HTTP_200_OK)
@@ -52,10 +52,14 @@ class ElectionView(APIView):
         responses= res
     )
     def post(self, request):
-        serializer = ElectionSerializer(data=request.data)
+        #print("request in post election view", request.data.keys())
+        data = request.data
+        data ["supervisor"] = request.user.id
+        serializer = ElectionSerializer(data=data)
         if(serializer.is_valid()):
+            # print(serializer.data)
             serializer.save()
-            return response.Response(serializer.validated_data, status=status.HTTP_201_CREATED)
+            return response.Response(serializer.data, status=status.HTTP_201_CREATED)
         print(serializer.errors)
         return response.Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -75,7 +79,7 @@ class ElectionDetailView(APIView):
         election = self.get_object(pk)
         serializer = ElectionSerializer(election)
         res = {
-            "data": serializer.validated_data,
+            "data": serializer.data,
             "message": f"Election id {pk}",
             "error": False
         }
@@ -92,7 +96,7 @@ class ElectionDetailView(APIView):
         serializer = ElectionSerializer(election, data=request.data, partial=True)
         if(serializer.is_valid()):
             serializer.save()
-            return response.Response(serializer.validated_data, status=status.HTTP_200_OK)
+            return response.Response(serializer.data, status=status.HTTP_200_OK)
         print(serializer.errors)
         return response.Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
