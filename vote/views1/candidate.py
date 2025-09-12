@@ -1,5 +1,3 @@
-
-
 from vote.models import Candidate
 from vote.serializers import CandidateSerializer
 from rest_framework.views import APIView
@@ -7,19 +5,36 @@ from rest_framework import response, status
 from django.http import Http404
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
-from vote.views1.user import res
+from vote.views1.user import CustomAuthentication, res
+from vote.paginations import CustomPaginator
+from rest_framework.pagination import PageNumberPagination
 
 
 class CandidateView(APIView):
+    authentication_classes = [CustomAuthentication]
 
     @swagger_auto_schema(
         operation_description="Returns candidature list",
         responses= res
     )
     def get(self, request):
-        candidate = candidate.objects.all()
-        serializer = CandidateSerializer(candidate, many=True)
-        return response.Response(serializer.data, status=status.HTTP_200_OK)
+
+        if request.user.is_authenticated and  request.user.has_perm('vote.view_election'):
+            candidates = Candidate.objects.all()
+            paginator =PageNumberPagination()
+            paginator_queryset = paginator.paginate_queryset(candidates, request)
+            serializer = CandidateSerializer(paginator_queryset, many=True)
+            # print("results", paginator.get_results(serializer.data))
+            return response.Response({
+                "data": CustomPaginator.format_json_response(paginator, serializer.data), # , serializer.data
+                "details": "Liste des candidatures",
+                "succes": True
+            }, status=status.HTTP_200_OK)
+            
+        return response.Response({
+            "details": "Access denied",
+            "succes": False
+        }, status=status.HTTP_403_FORBIDDEN)
 
     @swagger_auto_schema(
         operation_description="Create new candidature",
