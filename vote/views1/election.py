@@ -11,7 +11,7 @@ from vote.paginations import CustomPaginator
 from rest_framework.pagination import PageNumberPagination
 
 class ElectionView(APIView):
-    permission_classes = [ IsSupervisor ]
+    # permission_classes = [ IsSupervisor ]
     authentication_classes = [CustomAuthentication]
     
     @swagger_auto_schema(
@@ -24,9 +24,9 @@ class ElectionView(APIView):
             paginator =PageNumberPagination()
             paginator_queryset = paginator.paginate_queryset(elections, request)
             serializer = ElectionSerializer(paginator_queryset, many=True)
-            # print("results", paginator.get_results(serializer.validated_data))
+            # print("results", paginator.get_results(serializer.data))
             return response.Response({
-                "data": CustomPaginator.format_json_response(paginator, serializer.validated_data), # , serializer.validated_data
+                "data": CustomPaginator.format_json_response(paginator, serializer.data), # , serializer.data
                 "details": "Liste des elections",
                 "succes": True
             }, status=status.HTTP_200_OK)
@@ -52,15 +52,26 @@ class ElectionView(APIView):
         responses= res
     )
     def post(self, request):
-        serializer = ElectionSerializer(data=request.data)
-        if(serializer.is_valid()):
-            serializer.save()
-            return response.Response(serializer.validated_data, status=status.HTTP_201_CREATED)
-        print(serializer.errors)
-        return response.Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        #print("request in post election view", request.data.keys())
+        if request.user.is_authenticated and  request.user.has_perm('vote.add_election'):
+            data = request.data
+            data ["supervisor"] = request.user.id
+            serializer = ElectionSerializer(data=data)
+            if(serializer.is_valid()):
+                # print(serializer.data)
+                serializer.save()
+                return response.Response(serializer.data, status=status.HTTP_201_CREATED)
+            print(serializer.errors)
+            return response.Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return response.Response({
+            "details": "Access denied",
+            "succes": False
+        }, status=status.HTTP_403_FORBIDDEN)
+        
 
 class ElectionDetailView(APIView):
-    permission_classes = [ IsSupervisor ]
+    authentication_classes = [CustomAuthentication]
+    # permission_classes = [ IsSupervisor ]
     def get_object(self, pk):
         try:
             return Election.objects.get(pk=pk)
@@ -72,29 +83,48 @@ class ElectionDetailView(APIView):
         responses= res
     ) 
     def get(self, request, pk):
-        election = self.get_object(pk)
-        serializer = ElectionSerializer(election)
-        res = {
-            "data": serializer.validated_data,
-            "message": f"Election id {pk}",
-            "error": False
-        }
-        
-        return response.Response(res, status=status.HTTP_200_OK)
+        if request.user.is_authenticated and  request.user.has_perm('vote.view_election'):
+            election = self.get_object(pk)
+            serializer = ElectionSerializer(election)
+            res = {
+                "data": serializer.data,
+                "message": f"Election id {pk}",
+                "error": False
+            }
+            
+            return response.Response(res, status=status.HTTP_200_OK)
+        return response.Response({
+            "details": "Access denied",
+            "succes": False
+        }, status=status.HTTP_403_FORBIDDEN)
 
     @swagger_auto_schema(
         operation_description="Modify a single election details",
-        request_body=ElectionSerializer,
+        request_body=openapi.Schema(
+            description="Request body for election creation",
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'name': openapi.Schema(type=openapi.TYPE_STRING, description="name", default="name election", required=[]),
+                'begin_date': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME, description="begin date timestamp", required=[]),
+                'end_date': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME, description="end date timestamp", required=[]),
+                # 'state': openapi.Schema(type=openapi.TYPE_STRING, description="state"),
+            },
+        ),
         responses= res
     )
     def put(self, request, pk, *args, **kwargs):
-        election = self.get_object(pk)
-        serializer = ElectionSerializer(election, data=request.data, partial=True)
-        if(serializer.is_valid()):
-            serializer.save()
-            return response.Response(serializer.validated_data, status=status.HTTP_200_OK)
-        print(serializer.errors)
-        return response.Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        if request.user.is_authenticated and  request.user.has_perm('vote.change_election'):
+            election = self.get_object(pk)
+            serializer = ElectionSerializer(election, data=request.data, partial=True)
+            if(serializer.is_valid()):
+                serializer.save()
+                return response.Response(serializer.data, status=status.HTTP_200_OK)
+            print(serializer.errors)
+            return response.Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return response.Response({
+            "details": "Access denied",
+            "succes": False
+        }, status=status.HTTP_403_FORBIDDEN)
     
     @swagger_auto_schema(
         operation_description="Delete a single election by id",
@@ -105,6 +135,11 @@ class ElectionDetailView(APIView):
         }
     )
     def delete(self, request, pk, *args, **kwargs):
-        election = self.get_object(pk)
-        election.delete()
-        return response.Response(status=status.HTTP_204_NO_CONTENT)
+        if request.user.is_authenticated and  request.user.has_perm('vote.delete_election'):
+            election = self.get_object(pk)
+            election.delete()
+            return response.Response(status=status.HTTP_204_NO_CONTENT)
+        return response.Response({
+            "details": "Access denied",
+            "succes": False
+        }, status=status.HTTP_403_FORBIDDEN)

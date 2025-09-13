@@ -57,9 +57,9 @@ class CustomUserView(APIView):
             paginator =PageNumberPagination()
             paginator_queryset = paginator.paginate_queryset(users, request)
             serializer = CustomUserSerializer(paginator_queryset, many=True)
-            # print("results", paginator.get_results(serializer.validated_data))
+            # print("results", paginator.get_results(serializer.data))
             return response.Response({
-                "data": CustomPaginator.format_json_response(paginator, serializer.validated_data), # , serializer.validated_data
+                "data": CustomPaginator.format_json_response(paginator, serializer.data), # , serializer.validated_data
                 "details": "Liste des utilisateurs",
                 "succes": True
             }, status=status.HTTP_200_OK)
@@ -81,7 +81,7 @@ class CustomUserView(APIView):
         if(serializer.is_valid()):
             serializer.save()
             res['success'] = True
-            res['data'] = serializer.validated_data
+            res['data'] = serializer.data
             return response.Response(res, status=status.HTTP_201_CREATED)
         res['success'] = False
         res['data'] = serializer.errors
@@ -112,7 +112,7 @@ class CustomUserDetailView(APIView):
             user = self.get_object(pk)
             serializer = CustomUserSerializer(user)
             res = {
-                "data": serializer.validated_data,
+                "data": serializer.data,
                 "message": f"Utilisateur id {pk}",
                 "error": False
             }
@@ -133,7 +133,7 @@ class CustomUserDetailView(APIView):
         serializer = CustomUserSerializer(user, data=request.data)
         if(serializer.is_valid()):
             serializer.save()
-            return response.Response(serializer.validated_data, status=status.HTTP_200_OK)
+            return response.Response(serializer.data, status=status.HTTP_200_OK)
         print(serializer.errors)
         return response.Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     

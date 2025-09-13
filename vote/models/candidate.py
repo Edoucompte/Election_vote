@@ -6,7 +6,10 @@ from .election import Election
 class Candidate(models.Model):
     candidate = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='candidate')
     election = models.ForeignKey(Election, on_delete=models.CASCADE, related_name='election_candidature')
-    date_candidature = models.DateField()
+    date_candidature = models.DateTimeField()
+    description = models.CharField(blank=True)
+    is_accepted = models.CharField(default=False)
+    reject_message = models.CharField(blank=True)
 
     class Meta:
         constraints = [
