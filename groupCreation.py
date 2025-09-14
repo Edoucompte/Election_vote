@@ -24,3 +24,11 @@ candidate_content_type = ContentType.objects.get_for_model(Candidate)
 candidate_permissions = Permission.objects.filter(content_type=candidate_content_type) 
 [elector_group.permissions.add(perm) for perm in candidate_permissions if not perm.codename == 'change_candidate']
 
+'''
+    User peut :
+    - poser sa candidature, 
+    - voir, modifier ou supprimer ses candidatures uniquement
+    
+    - voir les candidats, (candidatures acceptees par superviseur) par election
+'''
+

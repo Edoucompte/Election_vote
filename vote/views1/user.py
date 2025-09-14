@@ -2,7 +2,7 @@ from vote.models import CustomUser
 from rest_framework.views import APIView
 from vote.paginations import CustomPaginator
 from rest_framework.pagination import PageNumberPagination
-from rest_framework import response, status, authentication, exceptions
+from rest_framework import response, status, authentication, exceptions, permissions
 from vote.permissions import IsSupervisor
 from vote.serializers import CustomUserSerializer
 from django.http import Http404
@@ -44,6 +44,8 @@ class CustomAuthentication(authentication.BasicAuthentication):
 class CustomUserView(APIView):
 
     authentication_classes = [CustomAuthentication]
+    permission_classes = [permissions.DjangoModelPermissions]
+    
     #permission_classes = [IsAuthenticated] # [IsSupervisor]
     
     @swagger_auto_schema(
@@ -93,6 +95,7 @@ class CustomUserDetailView(APIView):
     '''
 
     authentication_classes = [CustomAuthentication]
+    permission_classes = [permissions.DjangoModelPermissions]
     # permission_classes = [IsAdminUser] # [IsSupervisor]
     # permission_classes =[IsAuthenticatedOrReadOnly]
 
