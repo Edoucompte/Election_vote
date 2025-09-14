@@ -31,7 +31,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-
+CORS_ALLOw_ORIGIN= str(os.getenv('CORS_ALLOw_ORIGIN'))
 # Application definition
 
 INSTALLED_APPS = [
@@ -46,9 +46,11 @@ INSTALLED_APPS = [
     'vote',
     'django_seed',
     'django_filters',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
+    'corsheader.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
