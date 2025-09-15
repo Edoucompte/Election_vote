@@ -12,6 +12,7 @@ class Candidate(models.Model):
     reject_message = models.CharField(blank=True)
 
     class Meta:
+        ordering = ['-date_candidature', 'election_id']
         constraints = [
             models.UniqueConstraint(
                 fields=["candidate", "election"], name="unique_candidature_par_election"
