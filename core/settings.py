@@ -29,9 +29,12 @@ SECRET_KEY = str(os.getenv('SECRET_KEY'))
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1'
+]
 
-CORS_ALLOw_ORIGIN= str(os.getenv('CORS_ALLOw_ORIGIN'))
+CORS_ALLOWED_ORIGINS = str(os.getenv('CORS_ALLOw_ORIGIN')).split(',')
 # Application definition
 
 INSTALLED_APPS = [
@@ -50,7 +53,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'corsheader.middleware.CorsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
