@@ -53,7 +53,10 @@ class CandidateView(APIView):
             if serializer.is_valid():
                 serializer.save()
                 return response.Response(serializer.data, status=status.HTTP_201_CREATED)
-            return response.Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return response.Response({
+                "succes": False,
+                "errors":serializer.errors
+            }, status=status.HTTP_400_BAD_REQUEST)
         return response.Response({
             "details": "Access denied",
             "succes": False
@@ -78,7 +81,10 @@ class CandidateDetailView(APIView):
             candidate = self.get_object(pk)
             if not candidate:
                 return response.Response(
-                    {"error": "Candidature non trouvée"},
+                    {
+                        "succes": False,
+                        "errors": "Candidature non trouvée"
+                    },
                     status=status.HTTP_404_NOT_FOUND
                 )
             serializer = CandidateSerializer(candidate)
@@ -99,7 +105,10 @@ class CandidateDetailView(APIView):
             candidate = self.get_object(pk)
             if not candidate:
                 return response.Response(
-                    {"error": "Candidature non trouvée"},
+                    {
+                        "succes": False,
+                        "errors": "Candidature non trouvée"
+                    },
                     status=status.HTTP_404_NOT_FOUND
                 )
             serializer = CandidateSerializer(candidate, data=request.data, partial=True)
@@ -125,7 +134,7 @@ class CandidateDetailView(APIView):
             candidate= self.get_object(pk)
             if not candidate:
                 return response.Response(
-                    {"error": "Candidature non trouvée"},
+                    {"succes": False, "errors": "Candidature non trouvée"},
                     status=status.HTTP_404_NOT_FOUND
                 )
             candidate.delete()
@@ -155,7 +164,7 @@ class CandidateApprouveView(APIView):
             candidate = self.get_object(pk)
             if not candidate:
                 return response.Response(
-                    {"error": "Candidature non trouvée"},
+                    { "succes": False, "error": "Candidature non trouvée"},
                     status=status.HTTP_404_NOT_FOUND
                 )
             serializer = CandidateApprouveSerializer(candidate, data=request.data, partial=True)
@@ -195,5 +204,5 @@ class CandidatesListView(APIView):
             
         return response.Response({
             "details": "Access denied",
-            "succes": False
+            "succes": False,
         }, status=status.HTTP_403_FORBIDDEN)

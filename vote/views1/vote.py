@@ -48,7 +48,7 @@ class VoteView(APIView):
                 serializer.save()
                 return response.Response(serializer.data, status=status.HTTP_201_CREATED)
             print(serializer.errors)
-            return response.Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return response.Response({"succes": False, "errors":serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
         return response.Response({
             "details": "Access denied",
             "succes": False
