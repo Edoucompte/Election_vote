@@ -23,6 +23,7 @@ class ConnexionView(viewsets.ViewSet):
     )
     @action(detail=False, methods=['POST'])
     def register(self, request):
+        print("login starts")
         serializer = UserProfileSerializer(data=request.data)
         res = {
             "details": "Creation de compte Electeur",
@@ -93,3 +94,25 @@ class ConnexionView(viewsets.ViewSet):
         return  response.Response({
             "details": "Email or password incorrect"
         }, status=status.HTTP_400_BAD_REQUEST)
+
+    @swagger_auto_schema(
+        operation_description="Returns auth user",
+        responses={
+            200: "connected user",
+            401: "Unauthorized"
+        }  
+    )
+    @action(detail=False, methods=['POST'], authentication_classes=[CustomAuthentication] )
+    def user(self, request):
+        authUser = request.user
+        if authUser.is_authenticated:
+            serializer = CustomUserSerializer(authUser)
+            print("auth user is",serializer.data)
+            return response.Response({
+                "details": "utilisateur connected",
+                "success": True,
+                "data": serializer.data,
+            }, status=status.HTTP_200_OK)
+        return response.Response({
+            "details": "Utilisateur non autorisé"
+        }, status=status.HTTP_401_UNAUTHORIZED)
