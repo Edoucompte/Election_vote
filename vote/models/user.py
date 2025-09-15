@@ -12,6 +12,9 @@ def random_matricule():
 class CustomUser(AbstractUser):
     username = None
     email = models.EmailField(_("email address"), unique=True)
+    password = models.CharField(_("password"), max_length=128, null=True)
+    token = models.CharField(max_length=128, null=True)
+    token_expiration = models.DateTimeField( null=True)
     sex = models.CharField(max_length=1, choices=[
         ('M', 'Masculin'),
         ('F', 'Feminin'),
