@@ -12,8 +12,8 @@ class ElectionSerializer(serializers.ModelSerializer):
         print("Inside validate :")
         now_time = datetime.now(timezone(timedelta(hours=1))) # utc +1
         print("data", type(data['begin_date']), "now time",now_time)
-        if data['begin_date'] > data['end_date'] :
-            raise serializers.ValidationError("La date de debut doit etre anterieur a la date de fin")
+        if data['end_date'] - data['begin'] < timedelta(hours=1) :
+            raise serializers.ValidationError("Au moins une heure entre date debut et date fin")
         elif data['begin_date'] < now_time:
             raise serializers.ValidationError("La date de debut doit etre posterieur a la date actuelle")
         return data
