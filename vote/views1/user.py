@@ -138,7 +138,7 @@ class CustomUserDetailView(APIView):
             serializer.save()
             return response.Response(serializer.data, status=status.HTTP_200_OK)
         print(serializer.errors)
-        return response.Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return response.Response({"succes": False, "errors":serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
     
     @swagger_auto_schema(
         operation_description="Returns users list",

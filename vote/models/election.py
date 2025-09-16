@@ -6,6 +6,7 @@ class Election(models.Model):
     name = models.CharField(max_length= 100)
     begin_date = models.DateTimeField()
     end_date = models.DateTimeField()
+    description = models.CharField(max_length=1000)
     state = models.CharField(max_length=100, choices=[
         ('a_venir', 'A venir'),
         ('en_cours', 'En cours'),

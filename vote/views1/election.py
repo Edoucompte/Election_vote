@@ -46,6 +46,7 @@ class ElectionView(APIView):
                 'name': openapi.Schema(type=openapi.TYPE_STRING, description="name"),
                 'begin_date': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME, description="begin date timestamp"),
                 'end_date': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME, description="end date timestamp"),
+                'description': openapi.Schema(type=openapi.TYPE_STRING, description="description"),
                 # 'state': openapi.Schema(type=openapi.TYPE_STRING, description="state"),
             },
         ),
