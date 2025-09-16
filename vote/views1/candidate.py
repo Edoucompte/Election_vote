@@ -14,7 +14,7 @@ from rest_framework.permissions import IsAdminUser, DjangoModelPermissions
 
 class CandidateView(APIView):
     authentication_classes = [CustomAuthentication]
-    permission_classes = [DjangoModelPermissions]
+    # permission_classes = [DjangoModelPermissions]
 
     @swagger_auto_schema(
         operation_description="Returns candidature list",
@@ -44,11 +44,22 @@ class CandidateView(APIView):
 
     @swagger_auto_schema(
         operation_description="Create new candidature",
-        request_body=CandidateSerializer,
+        request_body=openapi.Schema(
+            description="Request body for election creation",
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'date_candidature': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME, description="date candidature"),
+                'election': openapi.Schema(type=openapi.TYPE_INTEGER, description="id election"),
+                'description': openapi.Schema(type=openapi.TYPE_STRING, description="description"),
+                # 'state': openapi.Schema(type=openapi.TYPE_STRING, description="state"),
+            },
+        ),
         responses= res
     )
     def post(self, request):
         if request.user.is_authenticated and  request.user.has_perm('vote.add_candidate'):
+            data = request.data
+            data ["candidate"] = request.user.id
             serializer = CandidateSerializer(data=request.data)
             if serializer.is_valid():
                 serializer.save()
