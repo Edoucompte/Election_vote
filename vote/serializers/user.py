@@ -5,6 +5,8 @@ from django.contrib.auth.models import Group
 
 class CustomUserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(read_only=True)
+    token = serializers.CharField(max_length=128, read_only=True)
+    token_expiration = serializers.DateTimeField( read_only=True)
     class Meta:
         model = CustomUser
         # fields = ['id', 'first_name', 'last_name', 'email', 'sexe', 'date_joined', 'date_naissance', 'matricule', 'is_active', 'is_staff']

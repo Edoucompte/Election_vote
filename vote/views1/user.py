@@ -72,7 +72,21 @@ class CustomUserView(APIView):
     
     @swagger_auto_schema(
         operation_description="Returns users list",
-        request_body=CustomUserSerializer,
+        request_body=openapi.Schema(
+            description="Request body for user(s) creation",
+            type=openapi.TYPE_OBJECT,
+            properties={
+                "first_name": openapi.Schema(type=openapi.TYPE_STRING, description="user fisrt name"),
+                "last_name": openapi.Schema(type=openapi.TYPE_STRING, description="user name name"),
+                "email": openapi.Schema(type=openapi.TYPE_STRING, description="user email"),
+                "sex": openapi.Schema(type=openapi.TYPE_STRING, description="user sex M or F", enum=['M', 'F']),
+                "birth_date": openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATE, description="user birthday date"),
+                "is_elector": openapi.Schema(type=openapi.TYPE_BOOLEAN, description="bool for user's role", default=True),
+                "is_supervisor": openapi.Schema(type=openapi.TYPE_BOOLEAN, description="bool for user's role", default=False),
+                "is_candidate": openapi.Schema(type=openapi.TYPE_BOOLEAN, description="bool for user's role", default=True)
+                # 'state': openapi.Schema(type=openapi.TYPE_STRING, description="state"),
+            },
+        ),
         responses=res
     )
     def post(self, request):
@@ -143,7 +157,7 @@ class CustomUserDetailView(APIView):
     @swagger_auto_schema(
         operation_description="Returns users list",
         responses={
-            204:'no contente',
+            204:'no content',
             401: 'Unauthenticated',
             403: 'Access denied'
         }

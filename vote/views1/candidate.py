@@ -157,7 +157,7 @@ class CandidateDetailView(APIView):
 
 class CandidateApprouveView(APIView):
     authentication_classes = [CustomAuthentication]
-    permission_classes = [ DjangoModelPermissions] # only for supervisor or admin
+    # permission_classes = [ DjangoModelPermissions] # only for supervisor or admin
     
     def get_object(self, pk):
         try:
@@ -188,10 +188,10 @@ class CandidateApprouveView(APIView):
             "succes": False
         }, status=status.HTTP_403_FORBIDDEN)
     
-class CandidatesListView(APIView):
+class CandidateListView(APIView):
     
     authentication_classes = [CustomAuthentication]
-    permission_classes = [ DjangoModelPermissions] # only for supervisor or admin
+    # permission_classes = [ DjangoModelPermissions] # only for supervisor or admin
     
     @swagger_auto_schema(
         operation_description="Returns approuved candidates list",
@@ -199,7 +199,7 @@ class CandidatesListView(APIView):
     )
     def get(self, request, election_id):
         '''
-            Retourne la liste de scandidats a une election donee
+            Retourne la liste de candidats a une election donee
         '''
         if request.user.is_authenticated and  request.user.is_active:
             candidates = Candidate.objects.filter(is_accepted= True, election_id= election_id) 
@@ -217,3 +217,19 @@ class CandidatesListView(APIView):
             "details": "Access denied",
             "succes": False,
         }, status=status.HTTP_403_FORBIDDEN)
+
+# class CandidatureView(APIView):
+#     authentication_classes = [CustomAuthentication]
+    
+#     @swagger_auto_schema(
+#         operation_description="Returns connected user's candidatures list",
+#         responses= res
+#     )
+#     def get(self, request):
+#         if request.user.is_authenticated and request.user.has_perm("vote.view_candidate"):
+            
+#             pass
+#         return response.Response({
+#             "details": "Access denied",
+#             "succes": False
+#         }, status=status.HTTP_403_FORBIDDEN)
