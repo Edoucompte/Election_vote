@@ -3,14 +3,21 @@ from vote.encryption import hashPassword
 from vote.models import CustomUser
 from django.contrib.auth.models import Group
 
+class UserListSerializer(serializers.ListSerializer):
+    def create(self, validated_data):
+        users = [CustomUser(**user) for user in validated_data]
+        return CustomUser.objects.bulk_create(users)
+
 class CustomUserSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(read_only=True)
-    token = serializers.CharField(max_length=128, read_only=True)
-    token_expiration = serializers.DateTimeField( read_only=True)
+    # password = serializers.CharField(read_only=True)
+    # token = serializers.CharField(max_length=128, read_only=True)
+    # token_expiration = serializers.DateTimeField( read_only=True)
     class Meta:
         model = CustomUser
+        list_serializer_class = UserListSerializer
         # fields = ['id', 'first_name', 'last_name', 'email', 'sexe', 'date_joined', 'date_naissance', 'matricule', 'is_active', 'is_staff']
         exclude = ('is_staff', 'is_superuser', 'user_permissions')
+        read_only_fields = ['token', 'token_expiration', 'password']
     
     def create(self, validated_data):
         # password = validated_data.pop('password')
@@ -61,4 +68,6 @@ class UserProfileSerializer(serializers.ModelSerializer):
         elector_group, created = Group.objects.get_or_create("Elector")
         user.groups.add(elector_group)
         return user
-  
+
+class UsersFileSerializer(serializers.Serializer):
+    creation = serializers.FileField()
