@@ -11,6 +11,9 @@ from vote.encryption import decodeToken
 import os
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+import pandas as pd
+
+from vote.serializers.user import UserListSerializer, UsersFileSerializer
 
 res = {
     200: " Success ",
@@ -186,12 +189,31 @@ class MassUserView(APIView):
         responses=res
     )
     def post(self, request):
-        print(request.data) # contains form data if parsers.MultiPartParser and parsers.FormParser
-        print(request.FILES) # MultiValueDict dict of uploaded files
-        # serializer = CustomUserSerializer(data=request.data, many=True)
+        # print(request.data) # contains form data if parsers.MultiPartParser and parsers.FormParser
+        # print(request.FILES) # MultiValueDict dict of uploaded files
+        file_serializer = UsersFileSerializer(data=request.Files['creation'])
         res = {
             "details": "Creation d'utilisateurs",
         }
+        if(file_serializer.is_valid()):
+            # res['data'] = list_serializer.data
+            try:
+                df = pd.read_excel(file_serializer.validated_data['creation'])
+                data = df.to_dict(orient='records')
+                serializer = CustomUserSerializer(data, many=True)
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+                res['data'] = serializer.data
+                res['success'] = True
+                return response.Response(res, status=status.HTTP_201_CREATED)
+            except Exception as e:
+                res['success'] = False
+                res['errors'] = str(e)
+                return response.Response(res, status=status.HTTP_400_BAD_REQUEST)
+                
+        res['success'] = False
+        res['errors'] = file_serializer.errors
+        return response.Response(res, status=status.HTTP_400_BAD_REQUEST)
         # if(serializer.is_valid()):
         #     serializer.save()
         #     res['success'] = True
