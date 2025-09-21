@@ -2,7 +2,7 @@ from django.urls import path, include
 
 from vote.views1.candidate import CandidateApprouveView, CandidateDetailView, CandidateView, CandidateListView
 from vote.views1.election import ElectionDetailView, ElectionView
-from vote.views1.user import CustomUserDetailView, CustomUserView
+from vote.views1.user import CustomUserDetailView, CustomUserView, MassUserView
 from vote.views1.vote import VoteDetailView, VoteView
 
 
@@ -25,6 +25,7 @@ urlpatterns = [
 
     path('users/', CustomUserView.as_view(), name='User view'),
     path('users/<int:pk>/', CustomUserDetailView.as_view(), name='User detail view'),
+    path('users/mass/', MassUserView.as_view()),
     path('elections/', ElectionView.as_view()),
     path('elections/<int:pk>/', ElectionDetailView.as_view()),
     path('elections/<int:election_id>/candidates/', CandidateListView.as_view(), name='Approuved candidates list'),
