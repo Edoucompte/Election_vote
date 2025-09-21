@@ -1,5 +1,6 @@
 from vote.models import CustomUser
 from rest_framework.views import APIView
+from rest_framework import parsers
 from vote.paginations import CustomPaginator
 from rest_framework.pagination import PageNumberPagination
 from rest_framework import response, status, authentication, exceptions, permissions
@@ -44,7 +45,7 @@ class CustomAuthentication(authentication.BasicAuthentication):
 class CustomUserView(APIView):
 
     authentication_classes = [CustomAuthentication]
-    permission_classes = [permissions.DjangoModelPermissions]
+    # permission_classes = [permissions.DjangoModelPermissions]
     
     #permission_classes = [IsAuthenticated] # [IsSupervisor]
     
@@ -83,7 +84,7 @@ class CustomUserView(APIView):
                 "birth_date": openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATE, description="user birthday date"),
                 "is_elector": openapi.Schema(type=openapi.TYPE_BOOLEAN, description="bool for user's role", default=True),
                 "is_supervisor": openapi.Schema(type=openapi.TYPE_BOOLEAN, description="bool for user's role", default=False),
-                "is_candidate": openapi.Schema(type=openapi.TYPE_BOOLEAN, description="bool for user's role", default=True)
+                "is_candidate": openapi.Schema(type=openapi.TYPE_BOOLEAN, description="bool for user's role", default=True),
                 # 'state': openapi.Schema(type=openapi.TYPE_STRING, description="state"),
             },
         ),
@@ -92,7 +93,7 @@ class CustomUserView(APIView):
     def post(self, request):
         serializer = CustomUserSerializer(data=request.data, many=True)
         res = {
-            "details": "Creation d'utilisateurs",
+            "details": "Creation d'utilisateur",
         }
         if(serializer.is_valid()):
             serializer.save()
@@ -166,3 +167,36 @@ class CustomUserDetailView(APIView):
         user = self.get_object(pk)
         user.delete()
         return response.Response(status=status.HTTP_204_NO_CONTENT)
+
+class MassUserView(APIView):
+    authentication_classes = [CustomAuthentication]
+    parser_classes = [parsers.MultiPartParser]
+    
+    @swagger_auto_schema(
+        operation_description="Returns users list",
+        manual_parameters=[
+            openapi.Parameter(
+                name='creation',
+                in_=openapi.IN_FORM,
+                type=openapi.TYPE_FILE,
+                description='Excel or csv file for create',
+                required=True
+            )
+        ],
+        responses=res
+    )
+    def post(self, request):
+        print(request.data) # contains form data if parsers.MultiPartParser and parsers.FormParser
+        print(request.FILES) # MultiValueDict dict of uploaded files
+        # serializer = CustomUserSerializer(data=request.data, many=True)
+        res = {
+            "details": "Creation d'utilisateurs",
+        }
+        # if(serializer.is_valid()):
+        #     serializer.save()
+        #     res['success'] = True
+        #     res['data'] = serializer.data
+        #     return response.Response(res, status=status.HTTP_201_CREATED)
+        # res['success'] = False
+        # res['data'] = serializer.errors
+        # return response.Response(res, status=status.HTTP_400_BAD_REQUEST)
