@@ -60,6 +60,7 @@ class ConnexionView(viewsets.ViewSet):
             # checker son password
             if(not checkPassword(serializer.data["password"], user.password)):
                 return response.Response({
+                    "succes": False,
                     "details": "Email or password incorrect"
                 }, status=status.HTTP_400_BAD_REQUEST)
             
@@ -68,6 +69,7 @@ class ConnexionView(viewsets.ViewSet):
                 "refresh": createToken(user.id, user.email, str(os.getenv('SECRET_KEY')), 1*24*60*60)
             }, status=status.HTTP_200_OK)
         return response.Response({
+                "succes": False,
                 "details": "Email or password incorrect"
             }, status=status.HTTP_400_BAD_REQUEST)
 
@@ -92,6 +94,7 @@ class ConnexionView(viewsets.ViewSet):
                 "access": createToken(authUser.id, authUser.email, str(os.getenv('SECRET_KEY')) , 60*60)
             }, status=status.HTTP_200_OK)
         return  response.Response({
+            "succes": False,
             "details": "Email or password incorrect"
         }, status=status.HTTP_400_BAD_REQUEST)
 
@@ -114,5 +117,6 @@ class ConnexionView(viewsets.ViewSet):
                 "data": serializer.data,
             }, status=status.HTTP_200_OK)
         return response.Response({
+            "success": False,
             "details": "Utilisateur non autorisé"
         }, status=status.HTTP_401_UNAUTHORIZED)

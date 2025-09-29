@@ -14,7 +14,7 @@ from rest_framework.permissions import IsAdminUser, DjangoModelPermissions
 
 class CandidateView(APIView):
     authentication_classes = [CustomAuthentication]
-    permission_classes = [DjangoModelPermissions]
+    # permission_classes = [DjangoModelPermissions]
 
     @swagger_auto_schema(
         operation_description="Returns candidature list",
@@ -44,16 +44,30 @@ class CandidateView(APIView):
 
     @swagger_auto_schema(
         operation_description="Create new candidature",
-        request_body=CandidateSerializer,
+        request_body=openapi.Schema(
+            description="Request body for election creation",
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'date_candidature': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME, description="date candidature"),
+                'election': openapi.Schema(type=openapi.TYPE_INTEGER, description="id election"),
+                'description': openapi.Schema(type=openapi.TYPE_STRING, description="description"),
+                # 'state': openapi.Schema(type=openapi.TYPE_STRING, description="state"),
+            },
+        ),
         responses= res
     )
     def post(self, request):
         if request.user.is_authenticated and  request.user.has_perm('vote.add_candidate'):
+            data = request.data
+            data ["candidate"] = request.user.id
             serializer = CandidateSerializer(data=request.data)
             if serializer.is_valid():
                 serializer.save()
                 return response.Response(serializer.data, status=status.HTTP_201_CREATED)
-            return response.Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return response.Response({
+                "succes": False,
+                "errors":serializer.errors
+            }, status=status.HTTP_400_BAD_REQUEST)
         return response.Response({
             "details": "Access denied",
             "succes": False
@@ -78,7 +92,10 @@ class CandidateDetailView(APIView):
             candidate = self.get_object(pk)
             if not candidate:
                 return response.Response(
-                    {"error": "Candidature non trouvée"},
+                    {
+                        "succes": False,
+                        "errors": "Candidature non trouvée"
+                    },
                     status=status.HTTP_404_NOT_FOUND
                 )
             serializer = CandidateSerializer(candidate)
@@ -99,7 +116,10 @@ class CandidateDetailView(APIView):
             candidate = self.get_object(pk)
             if not candidate:
                 return response.Response(
-                    {"error": "Candidature non trouvée"},
+                    {
+                        "succes": False,
+                        "errors": "Candidature non trouvée"
+                    },
                     status=status.HTTP_404_NOT_FOUND
                 )
             serializer = CandidateSerializer(candidate, data=request.data, partial=True)
@@ -125,7 +145,7 @@ class CandidateDetailView(APIView):
             candidate= self.get_object(pk)
             if not candidate:
                 return response.Response(
-                    {"error": "Candidature non trouvée"},
+                    {"succes": False, "errors": "Candidature non trouvée"},
                     status=status.HTTP_404_NOT_FOUND
                 )
             candidate.delete()
@@ -137,7 +157,7 @@ class CandidateDetailView(APIView):
 
 class CandidateApprouveView(APIView):
     authentication_classes = [CustomAuthentication]
-    permission_classes = [ DjangoModelPermissions] # only for supervisor or admin
+    # permission_classes = [ DjangoModelPermissions] # only for supervisor or admin
     
     def get_object(self, pk):
         try:
@@ -155,7 +175,7 @@ class CandidateApprouveView(APIView):
             candidate = self.get_object(pk)
             if not candidate:
                 return response.Response(
-                    {"error": "Candidature non trouvée"},
+                    { "succes": False, "error": "Candidature non trouvée"},
                     status=status.HTTP_404_NOT_FOUND
                 )
             serializer = CandidateApprouveSerializer(candidate, data=request.data, partial=True)
@@ -168,10 +188,10 @@ class CandidateApprouveView(APIView):
             "succes": False
         }, status=status.HTTP_403_FORBIDDEN)
     
-class CandidatesListView(APIView):
+class CandidateListView(APIView):
     
     authentication_classes = [CustomAuthentication]
-    permission_classes = [ DjangoModelPermissions] # only for supervisor or admin
+    # permission_classes = [ DjangoModelPermissions] # only for supervisor or admin
     
     @swagger_auto_schema(
         operation_description="Returns approuved candidates list",
@@ -179,7 +199,7 @@ class CandidatesListView(APIView):
     )
     def get(self, request, election_id):
         '''
-            Retourne la liste de scandidats a une election donee
+            Retourne la liste de candidats a une election donee
         '''
         if request.user.is_authenticated and  request.user.is_active:
             candidates = Candidate.objects.filter(is_accepted= True, election_id= election_id) 
@@ -195,5 +215,21 @@ class CandidatesListView(APIView):
             
         return response.Response({
             "details": "Access denied",
-            "succes": False
+            "succes": False,
         }, status=status.HTTP_403_FORBIDDEN)
+
+# class CandidatureView(APIView):
+#     authentication_classes = [CustomAuthentication]
+    
+#     @swagger_auto_schema(
+#         operation_description="Returns connected user's candidatures list",
+#         responses= res
+#     )
+#     def get(self, request):
+#         if request.user.is_authenticated and request.user.has_perm("vote.view_candidate"):
+            
+#             pass
+#         return response.Response({
+#             "details": "Access denied",
+#             "succes": False
+#         }, status=status.HTTP_403_FORBIDDEN)
