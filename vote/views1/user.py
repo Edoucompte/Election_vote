@@ -20,6 +20,7 @@ res = {
 class CustomAuthentication(authentication.BasicAuthentication):
     def authenticate(self, request):
         #extraire le token du header
+        print(request)
         token = request.META.get('HTTP_AUTHORIZATION')
         if not token:
             return None
@@ -44,7 +45,7 @@ class CustomAuthentication(authentication.BasicAuthentication):
 class CustomUserView(APIView):
 
     authentication_classes = [CustomAuthentication]
-    permission_classes = [permissions.DjangoModelPermissions]
+    permission_classes = [ ]
     
     #permission_classes = [IsAuthenticated] # [IsSupervisor]
     
@@ -95,7 +96,7 @@ class CustomUserDetailView(APIView):
     '''
 
     authentication_classes = [CustomAuthentication]
-    permission_classes = [permissions.DjangoModelPermissions]
+    permission_classes = [ ]
     # permission_classes = [IsAdminUser] # [IsSupervisor]
     # permission_classes =[IsAuthenticatedOrReadOnly]
 
