@@ -192,16 +192,20 @@ class MassUserView(APIView):
     def post(self, request):
         # print(request.data) # contains form data if parsers.MultiPartParser and parsers.FormParser
         # print(request.FILES) # MultiValueDict dict of uploaded files
-        file_serializer = UsersFileSerializer(data=request.Files['creation'])
+        file_serializer = UsersFileSerializer(data=request.data)
+        # print('request ', request.FILES['creation'])
         res = {
             "details": "Creation d'utilisateurs",
         }
         if(file_serializer.is_valid()):
             # res['data'] = list_serializer.data
+            # print('serialized data', file_serializer.data)
             try:
                 df = pd.read_excel(file_serializer.validated_data['creation'])
+                print('dict', df)
                 data = df.to_dict(orient='records')
-                serializer = CustomUserSerializer(data, many=True)
+                print('data ', data)
+                serializer = CustomUserSerializer(data=data, many=True)
                 serializer.is_valid(raise_exception=True)
                 serializer.save()
                 res['data'] = serializer.data
@@ -211,10 +215,11 @@ class MassUserView(APIView):
                 res['success'] = False
                 res['errors'] = str(e)
                 return response.Response(res, status=status.HTTP_400_BAD_REQUEST)
-                
+        # print('validation error')
         res['success'] = False
         res['errors'] = file_serializer.errors
         return response.Response(res, status=status.HTTP_400_BAD_REQUEST)
+        
         # if(serializer.is_valid()):
         #     serializer.save()
         #     res['success'] = True
