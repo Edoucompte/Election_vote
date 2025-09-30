@@ -94,7 +94,7 @@ class CustomUserView(APIView):
         responses=res
     )
     def post(self, request):
-        serializer = CustomUserSerializer(data=request.data, many=True)
+        serializer = CustomUserSerializer(data=request.data, many=False)
         res = {
             "details": "Creation d'utilisateur",
         }
@@ -201,6 +201,7 @@ class MassUserView(APIView):
             # print('serialized data', file_serializer.data)
             try:
                 df = pd.read_excel(file_serializer.validated_data['creation'])
+                df['birth_date'] = pd.to_datetime(df['birth_date']).dt.date #date string converts to date type
                 print('dict', df)
                 data = df.to_dict(orient='records')
                 print('data ', data)

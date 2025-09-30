@@ -23,6 +23,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
         # password = validated_data.pop('password')
         user = CustomUser(**validated_data)
         if(validated_data.get('is_supervisor')):
+            print('Supervisor Creation')
             setattr(user, 'is_staff', True)
             setattr(user, 'is_superuser', True)
         # setattr(user, 'password', hashPassword(password) )
@@ -30,6 +31,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
         user.save()
 
         if(not user.is_supervisor):
+            print('USer adding to elector group')
             elector_group, created = Group.objects.get_or_create("Elector")
             user.groups.add(elector_group)
         return user
