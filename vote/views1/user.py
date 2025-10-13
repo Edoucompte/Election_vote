@@ -7,6 +7,7 @@ from rest_framework import response, status, authentication, exceptions, permiss
 from vote.permissions import IsSupervisor
 from vote.serializers import CustomUserSerializer
 from django.http import Http404
+from django.contrib.auth.models import Group
 from vote.encryption import decodeToken
 import os
 from drf_yasg.utils import swagger_auto_schema
@@ -73,7 +74,8 @@ class CustomUserView(APIView):
             "details": "Access denied",
             "succes": False
         }, status=status.HTTP_403_FORBIDDEN)
-    
+
+
     @swagger_auto_schema(
         operation_description="Returns users list",
         request_body=openapi.Schema(
@@ -202,12 +204,17 @@ class MassUserView(APIView):
             try:
                 df = pd.read_excel(file_serializer.validated_data['creation'])
                 df['birth_date'] = pd.to_datetime(df['birth_date']).dt.date #date string converts to date type
-                print('dict', df)
+                # print('dict', df)
                 data = df.to_dict(orient='records')
-                print('data ', data)
+                # print('data ', data)
                 serializer = CustomUserSerializer(data=data, many=True)
                 serializer.is_valid(raise_exception=True)
                 serializer.save()
+                ids = [user['id'] for user in serializer.data ]
+                newUserAdded = CustomUser.objects.filter(id__in=ids)
+                elector_group, created = Group.objects.get_or_create("Elector")
+                elector_group.user_set.add(*newUserAdded)
+                print('newUsers', newUserAdded, 'serializer', serializer.data)
                 res['data'] = serializer.data
                 res['success'] = True
                 return response.Response(res, status=status.HTTP_201_CREATED)
