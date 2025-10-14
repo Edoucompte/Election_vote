@@ -33,7 +33,7 @@ class CustomAuthentication(authentication.BasicAuthentication):
         secret = str(os.getenv('SECRET_KEY'))
         try:
             payload = decodeToken(token, secret)
-            # print(payload)
+            print(payload)
         except Exception as e:
             raise exceptions.AuthenticationFailed("Invalid token")
 
@@ -61,12 +61,12 @@ class CustomUserView(APIView):
 
         if request.user.is_authenticated and  request.user.has_perm('vote.view_cutomuser'):
             users = CustomUser.objects.all()
-            paginator =PageNumberPagination()
-            paginator_queryset = paginator.paginate_queryset(users, request)
-            serializer = CustomUserSerializer(paginator_queryset, many=True)
+            # paginator =PageNumberPagination()
+            # paginator_queryset = paginator.paginate_queryset(users, request)
+            serializer = CustomUserSerializer(users, many=True)
             # print("results", paginator.get_results(serializer.data))
             return response.Response({
-                "data": CustomPaginator.format_json_response(paginator, serializer.data), # , serializer.validated_data
+                "data": serializer.data, #CustomPaginator.format_json_response(paginator, serializer.data), # , 
                 "details": "Liste des utilisateurs",
                 "succes": True
             }, status=status.HTTP_200_OK)
@@ -115,7 +115,7 @@ class CustomUserDetailView(APIView):
     '''
 
     authentication_classes = [CustomAuthentication]
-    permission_classes = [permissions.DjangoModelPermissions]
+    # permission_classes = [permissions.DjangoModelPermissions]
     # permission_classes = [IsAdminUser] # [IsSupervisor]
     # permission_classes =[IsAuthenticatedOrReadOnly]
 
