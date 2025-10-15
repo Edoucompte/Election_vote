@@ -8,11 +8,14 @@ from vote.permissions import IsSupervisor
 from vote.serializers import CustomUserSerializer
 from django.http import Http404
 from django.contrib.auth.models import Group
+from django.core.mail import send_mail
 from vote.encryption import decodeToken
 import os
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 import pandas as pd
+import random
+import string
 
 from vote.serializers.user import UserListSerializer, UsersFileSerializer
 
@@ -21,6 +24,11 @@ res = {
     401: "Unauthenticated",
     403: "Access denied"
 }
+
+def generate_random_string(length):
+    characters = string.ascii_letters + string.digits + string.punctuation
+    random_string = ''.join(random.choice(characters) for _ in range(length))
+    return random_string
 
 class CustomAuthentication(authentication.BasicAuthentication):
     def authenticate(self, request):
@@ -104,6 +112,22 @@ class CustomUserView(APIView):
             serializer.save()
             res['success'] = True
             res['data'] = serializer.data
+            reset_password_token = generate_random_string(100)
+            try :
+                send_mail(
+                    'Super Vote Definition de mot de passe', 
+                    f""" 
+                        M/Mme {serializer.data['first_name']} {serializer.data['last_name']},
+                        Un administrateur de la plateforme Super Vote
+                        vient de vous créer un compte Electeur. Veuillez cliquer sur le lien suivant pour choisir un mot de passe:
+                        http://localhost:5173/setPassword/{reset_password_token}
+                    """, 
+                    'super@vote.com', 
+                    [serializer.data['email']], 
+                    fail_silently=False
+                )
+            except :
+                print('Mail sending failed. Check the SMTP server.')
             return response.Response(res, status=status.HTTP_201_CREATED)
         res['success'] = False
         res['data'] = serializer.errors
@@ -210,11 +234,32 @@ class MassUserView(APIView):
                 serializer = CustomUserSerializer(data=data, many=True)
                 serializer.is_valid(raise_exception=True)
                 serializer.save()
+                
                 ids = [user['id'] for user in serializer.data ]
                 newUserAdded = CustomUser.objects.filter(id__in=ids)
                 elector_group, created = Group.objects.get_or_create("Elector")
                 elector_group.user_set.add(*newUserAdded)
-                print('newUsers', newUserAdded, 'serializer', serializer.data)
+                
+                # print('newUsers', newUserAdded, 'serializer', serializer.data)
+                identifiants = [(user['email'], f"{user['last_name']} {user['first_name']}") for user in serializer.data ]
+                for identifiant in identifiants:
+                    reset_password_token = generate_random_string(100)
+                    try:
+                        send_mail(
+                            'Super Vote Definition de mot de passe', 
+                            f"""
+                                M/Mme  ${identifiant[1]},
+                                Un administrateur de la plateforme Super Vote
+                                vient de vous créer un compte Electeur. Veuillez cliquer sur le lien suivant pour choisir un mot de passe:
+                                http://localhost:5173/setPassword/{reset_password_token}
+                            """, 
+                            'super@vote.com', 
+                            [identifiant[0]], 
+                            fail_silently=False
+                        )
+                    except :
+                        print(f" Erreur lors de l'envoi de mail a {identifiant[0]} ")
+                
                 res['data'] = serializer.data
                 res['success'] = True
                 return response.Response(res, status=status.HTTP_201_CREATED)
