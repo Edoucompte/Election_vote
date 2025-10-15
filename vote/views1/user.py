@@ -112,7 +112,7 @@ class CustomUserView(APIView):
             serializer.save()
             res['success'] = True
             res['data'] = serializer.data
-            reset_password_token = generate_random_string(100)
+            reset_password_token = generate_random_string(60)
             try :
                 send_mail(
                     'Super Vote Definition de mot de passe', 
@@ -120,7 +120,7 @@ class CustomUserView(APIView):
                         M/Mme {serializer.data['first_name']} {serializer.data['last_name']},
                         Un administrateur de la plateforme Super Vote
                         vient de vous créer un compte Electeur. Veuillez cliquer sur le lien suivant pour choisir un mot de passe:
-                        http://localhost:5173/setPassword/{reset_password_token}
+                        http://localhost:5173/setPassword/{serializer.data['token']}
                     """, 
                     'super@vote.com', 
                     [serializer.data['email']], 
@@ -243,7 +243,7 @@ class MassUserView(APIView):
                 # print('newUsers', newUserAdded, 'serializer', serializer.data)
                 identifiants = [(user['email'], f"{user['last_name']} {user['first_name']}") for user in serializer.data ]
                 for identifiant in identifiants:
-                    reset_password_token = generate_random_string(100)
+                    reset_password_token = generate_random_string(60)
                     try:
                         send_mail(
                             'Super Vote Definition de mot de passe', 

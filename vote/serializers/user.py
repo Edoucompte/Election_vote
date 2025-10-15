@@ -2,7 +2,14 @@ from rest_framework import serializers
 from vote.encryption import hashPassword
 from vote.models import CustomUser
 from django.contrib.auth.models import Group
+import string
+import random
+from datetime import timedelta, datetime
 
+def generate_random_string(length):
+    characters = string.ascii_letters + string.digits + string.punctuation
+    random_string = ''.join(random.choice(characters) for _ in range(length))
+    return random_string
 class UserListSerializer(serializers.ListSerializer):
     def create(self, validated_data):
         users = [CustomUser(**user) for user in validated_data]
@@ -17,7 +24,12 @@ class CustomUserSerializer(serializers.ModelSerializer):
         list_serializer_class = UserListSerializer
         # fields = ['id', 'first_name', 'last_name', 'email', 'sexe', 'date_joined', 'date_naissance', 'matricule', 'is_active', 'is_staff']
         exclude = ('is_staff', 'is_superuser', 'user_permissions')
-        read_only_fields = ['token', 'token_expiration', 'password']
+        read_only_fields = [ 'password']
+    
+    def to_internal_value(self, data):
+        data['token'] = generate_random_string(60)
+        data['token_expiration'] = datetime.now() + timedelta(minutes=8)
+        return data
     
     def create(self, validated_data):
         # password = validated_data.pop('password')
