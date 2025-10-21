@@ -13,29 +13,29 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
 class ConnexionView(viewsets.ViewSet):
-    @swagger_auto_schema(
-        method="POST",
-        request_body=UserProfileSerializer,
-        responses={
-            200:"details: Creation de compte Electeur", 
-            400: "details: Invalid credentials"
-        }
-    )
-    @action(detail=False, methods=['POST'])
-    def register(self, request):
-        print("login starts")
-        serializer = UserProfileSerializer(data=request.data)
-        res = {
-            "details": "Creation de compte Electeur",
-        }
-        if(serializer.is_valid()):
-            serializer.save()
-            res['success'] = True
-            res['data'] = serializer.data
-            return response.Response(res, status=status.HTTP_201_CREATED)
-        res['success'] = False
-        res['data'] = serializer.errors
-        return response.Response(res, status=status.HTTP_400_BAD_REQUEST)
+    # @swagger_auto_schema(
+    #     method="POST",
+    #     request_body=UserProfileSerializer,
+    #     responses={
+    #         200:"details: Creation de compte Electeur", 
+    #         400: "details: Invalid credentials"
+    #     }
+    # )
+    # @action(detail=False, methods=['POST'])
+    # def register(self, request):
+    #     print("login starts")
+    #     serializer = UserProfileSerializer(data=request.data)
+    #     res = {
+    #         "details": "Creation de compte Electeur",
+    #     }
+    #     if(serializer.is_valid()):
+    #         serializer.save()
+    #         res['success'] = True
+    #         res['data'] = serializer.data
+    #         return response.Response(res, status=status.HTTP_201_CREATED)
+    #     res['success'] = False
+    #     res['data'] = serializer.errors
+    #     return response.Response(res, status=status.HTTP_400_BAD_REQUEST)
 
     # @authentication_classes()
     @swagger_auto_schema(
