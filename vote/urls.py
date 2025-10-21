@@ -2,7 +2,7 @@ from django.urls import path, include
 
 from vote.views1.candidate import CandidateApprouveView, CandidateDetailView, CandidateView, CandidateListView
 from vote.views1.election import ElectionDetailView, ElectionView
-from vote.views1.user import CustomUserDetailView, CustomUserView, MassUserView
+from vote.views1.user import CustomUserDetailView, CustomUserView, MassUserView, ResetUserPasswordView
 from vote.views1.vote import VoteDetailView, VoteView
 
 
@@ -14,14 +14,15 @@ from rest_framework import routers
 from vote.views import CandidatureModelViewSet, CustomUserModelViewSet, ElectionModelViewSet, VoteModelViewSet
 
 router = routers.DefaultRouter()
-router.register(r'users', CustomUserModelViewSet)
-router.register(r'elections', ElectionModelViewSet)
-router.register(r'votes', VoteModelViewSet)
-router.register(r'candidatures', CandidatureModelViewSet)
+router.register(r'users/reset_password', ResetUserPasswordView, basename='user' )
+# router.register(r'users', CustomUserModelViewSet)
+# router.register(r'elections', ElectionModelViewSet)
+# router.register(r'votes', VoteModelViewSet)
+# router.register(r'candidatures', CandidatureModelViewSet)
 
 urlpatterns = [
     #path('votes/', views.votes)
-    #path('', include(router.urls)),
+    path('', include(router.urls)),
 
     path('users/', CustomUserView.as_view(), name='User view'),
     path('users/<int:pk>/', CustomUserDetailView.as_view(), name='User detail view'),

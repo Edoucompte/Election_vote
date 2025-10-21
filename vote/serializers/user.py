@@ -17,8 +17,8 @@ class UserListSerializer(serializers.ListSerializer):
 
 class CustomUserSerializer(serializers.ModelSerializer):
     # password = serializers.CharField(read_only=True)
-    # token = serializers.CharField(max_length=128, read_only=True)
-    # token_expiration = serializers.DateTimeField( read_only=True)
+    token = serializers.CharField(max_length=128, read_only=True)
+    token_expiration = serializers.DateTimeField( read_only=True)
     class Meta:
         model = CustomUser
         list_serializer_class = UserListSerializer
@@ -26,10 +26,10 @@ class CustomUserSerializer(serializers.ModelSerializer):
         exclude = ('is_staff', 'is_superuser', 'user_permissions')
         read_only_fields = [ 'password']
     
-    def to_internal_value(self, data):
-        data['token'] = generate_random_string(60)
-        data['token_expiration'] = datetime.now() + timedelta(minutes=8)
-        return data
+    # def to_internal_value(self, data):
+    #     data['token'] = generate_random_string(60)
+    #     data['token_expiration'] = datetime.now() + timedelta(minutes=8)
+    #     return data
     
     def create(self, validated_data):
         # password = validated_data.pop('password')
