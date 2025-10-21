@@ -1,6 +1,9 @@
+from vote.encryption.password_encryption import hashPassword
 from vote.models import CustomUser
 from rest_framework.views import APIView
+from rest_framework.viewsets import ViewSet
 from rest_framework import parsers
+from rest_framework.decorators import action
 from vote.paginations import CustomPaginator
 from rest_framework.pagination import PageNumberPagination
 from rest_framework import response, status, authentication, exceptions, permissions
@@ -8,6 +11,7 @@ from vote.permissions import IsSupervisor
 from vote.serializers import CustomUserSerializer
 from django.http import Http404
 from django.contrib.auth.models import Group
+from django.contrib.auth.password_validation import validate_password
 from django.core.mail import send_mail
 from vote.encryption import decodeToken
 import os
@@ -16,6 +20,7 @@ from drf_yasg import openapi
 import pandas as pd
 import random
 import string
+from datetime import timedelta, datetime
 
 from vote.serializers.user import UserListSerializer, UsersFileSerializer
 
@@ -120,7 +125,7 @@ class CustomUserView(APIView):
                         M/Mme {serializer.data['first_name']} {serializer.data['last_name']},
                         Un administrateur de la plateforme Super Vote
                         vient de vous créer un compte Electeur. Veuillez cliquer sur le lien suivant pour choisir un mot de passe:
-                        http://localhost:5173/setPassword/{serializer.data['token']}
+                        http://localhost:5173/startSetPassword/
                     """, 
                     'super@vote.com', 
                     [serializer.data['email']], 
@@ -196,6 +201,13 @@ class CustomUserDetailView(APIView):
         user = self.get_object(pk)
         user.delete()
         return response.Response(status=status.HTTP_204_NO_CONTENT)
+    
+    def patch(self, request, secret):
+        try:
+            user = CustomUser.object.get(token=secret)
+        except CustomUser.DoesNotExist:
+            return response.Response({"succes": False, "errors":"Invalid secret"}, status=status.HTTP_400_BAD_REQUEST)
+        # serializer - CustomUserSerializer
 
 class MassUserView(APIView):
     authentication_classes = [CustomAuthentication]
@@ -248,10 +260,10 @@ class MassUserView(APIView):
                         send_mail(
                             'Super Vote Definition de mot de passe', 
                             f"""
-                                M/Mme  ${identifiant[1]},
+                                M/Mme  {identifiant[1]},
                                 Un administrateur de la plateforme Super Vote
                                 vient de vous créer un compte Electeur. Veuillez cliquer sur le lien suivant pour choisir un mot de passe:
-                                http://localhost:5173/setPassword/{reset_password_token}
+                                http://localhost:5173/startSetPassword/
                             """, 
                             'super@vote.com', 
                             [identifiant[0]], 
@@ -280,3 +292,87 @@ class MassUserView(APIView):
         # res['success'] = False
         # res['data'] = serializer.errors
         # return response.Response(res, status=status.HTTP_400_BAD_REQUEST)
+
+class ResetUserPasswordView(ViewSet):
+    @swagger_auto_schema(
+        operation_description="Returns users list",
+        manual_parameters=[
+            openapi.Parameter(
+                name='email',
+                in_=openapi.IN_QUERY,
+                type=openapi.TYPE_STRING,
+                description='user email',
+                required=True
+            )
+        ],
+        responses=res
+    )
+    @action(detail=False, methods=['get'])
+    def getResetLink(self, request):
+        # Should get email in query params
+        email = request.query_params.get('email')
+        res = { "details": 'Demande de definition de mot de passe'}
+        try:
+            user = CustomUser.objects.get(email=email)
+            user['token'] = generate_random_string(60)
+            user['token_expiration'] = datetime.now() + timedelta(minutes=8)
+            user.save()
+            send_mail(
+                'Super Vote Definition de mot de passe', 
+                f"""
+                    M/Mme  {user.last_name},
+                    Vous venez d'initier une procedure de channgement de mot de passe
+                    Veuillez cliquer sur le lien suivant valide sur 8 minutes :
+                    http://localhost:5173/setPassword/{user.token}.
+                    Si cela ne vient pas de vous, ignorez juste ce message.
+                """, 
+                'super@vote.com', 
+                user.email, 
+                fail_silently=False
+            )
+            res["success"]= True
+        except CustomUser.DoesNotExist:
+            res['success']= False
+            res["errors"] = "Utilisateur non identifié"
+            return response.Response( status=status.HTTP_400_BAD_REQUEST)
+        return response.Response(data=res, status=status.HTTP_200_OK)
+
+    @swagger_auto_schema(
+        operation_description="Reset user password",
+        request_body=openapi.Schema(
+            description="Request body for user's password reset",
+            type=openapi.TYPE_OBJECT,
+            properties={
+                "token": openapi.Schema(type=openapi.TYPE_STRING, description="token de modification de mot de passe"),
+                "password": openapi.Schema(type=openapi.TYPE_STRING, description="mot de passe"),
+            },
+        ),
+        responses=res
+    )
+    @action(detail=False, methods=['patch'])
+    def resetPassword(self, request, pk=None):
+        res = {"details": "Modificaton de mot de passe"}
+        try:
+            #rechercher par token
+            user = CustomUser.objects.get(token=request.data["token"])
+            pwd = request.data.get("password")
+            if validate_password(pwd) : 
+                # modifcation des informations
+                setattr(user, 'password', hashPassword() )
+                user.token = None
+                user.token_expiration = None
+                user.save()
+            else :
+                #message d'erreur
+                res['success']= False
+                res["errors"] = "Mot de passe invalide"
+                return response.Response( status=status.HTTP_400_BAD_REQUEST)
+            #user['password'] = hashPassword(password) #.set_password(password)
+        except CustomUser.DoesNotExist:
+            res['success']= False
+            res["errors"] = "Utilisateur non identifié"
+            return response.Response( status=status.HTTP_400_BAD_REQUEST)
+        return response.Response(
+            data=res,
+            status=status.HTTP_200_OK
+        )
