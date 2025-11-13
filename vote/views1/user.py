@@ -1,9 +1,11 @@
 from vote.encryption.password_encryption import hashPassword
 from vote.models import CustomUser
 from rest_framework.views import APIView
+
 from rest_framework.viewsets import ViewSet
 from rest_framework import parsers
 from rest_framework.decorators import action
+
 from vote.paginations import CustomPaginator
 from rest_framework.pagination import PageNumberPagination
 from rest_framework import response, status, authentication, exceptions, permissions
@@ -18,6 +20,7 @@ import os
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 import pandas as pd
+
 import random
 import string
 from datetime import timedelta, datetime
@@ -201,6 +204,7 @@ class CustomUserDetailView(APIView):
         user = self.get_object(pk)
         user.delete()
         return response.Response(status=status.HTTP_204_NO_CONTENT)
+
     
     def patch(self, request, secret):
         try:
@@ -229,6 +233,8 @@ class MassUserView(APIView):
     def post(self, request):
         # print(request.data) # contains form data if parsers.MultiPartParser and parsers.FormParser
         # print(request.FILES) # MultiValueDict dict of uploaded files
+        #file_serializer = UsersFileSerializer(data=request.Files['creation'])
+
         file_serializer = UsersFileSerializer(data=request.data)
         # print('request ', request.FILES['creation'])
         res = {
@@ -236,6 +242,14 @@ class MassUserView(APIView):
         }
         if(file_serializer.is_valid()):
             # res['data'] = list_serializer.data
+
+#            try:
+#                df = pd.read_excel(file_serializer.validated_data['creation'])
+#                data = df.to_dict(orient='records')
+#                serializer = CustomUserSerializer(data, many=True)
+#                serializer.is_valid(raise_exception=True)
+#                serializer.save()
+
             # print('serialized data', file_serializer.data)
             try:
                 df = pd.read_excel(file_serializer.validated_data['creation'])
@@ -279,10 +293,11 @@ class MassUserView(APIView):
                 res['success'] = False
                 res['errors'] = str(e)
                 return response.Response(res, status=status.HTTP_400_BAD_REQUEST)
-        # print('validation error')
+
         res['success'] = False
         res['errors'] = file_serializer.errors
         return response.Response(res, status=status.HTTP_400_BAD_REQUEST)
+        
         
         # if(serializer.is_valid()):
         #     serializer.save()
@@ -376,3 +391,4 @@ class ResetUserPasswordView(ViewSet):
             data=res,
             status=status.HTTP_200_OK
         )
+

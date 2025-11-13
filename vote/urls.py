@@ -2,6 +2,7 @@ from django.urls import path, include
 
 from vote.views1.candidate import CandidateApprouveView, CandidateDetailView, CandidateView, CandidateListView
 from vote.views1.election import ElectionDetailView, ElectionView
+
 from vote.views1.user import CustomUserDetailView, CustomUserView, MassUserView, ResetUserPasswordView
 from vote.views1.vote import VoteDetailView, VoteView
 
