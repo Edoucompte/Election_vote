@@ -21,12 +21,12 @@ class ElectionView(APIView):
     def get(self, request, *args, **kwargs):
         if request.user.is_authenticated and  request.user.has_perm('vote.view_election'):
             elections = Election.objects.all()
-            paginator =PageNumberPagination()
-            paginator_queryset = paginator.paginate_queryset(elections, request)
-            serializer = ElectionSerializer(paginator_queryset, many=True)
+            # paginator =PageNumberPagination()
+            # paginator_queryset = paginator.paginate_queryset(elections, request)
+            serializer = ElectionSerializer(elections, many=True)
             # print("results", paginator.get_results(serializer.data))
             return response.Response({
-                "data": CustomPaginator.format_json_response(paginator, serializer.data), # , serializer.data
+                "data": serializer.data, #CustomPaginator.format_json_response(paginator, serializer.data), # , 
                 "details": "Liste des elections",
                 "succes": True
             }, status=status.HTTP_200_OK)

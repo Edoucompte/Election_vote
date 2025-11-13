@@ -13,29 +13,29 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
 class ConnexionView(viewsets.ViewSet):
-    @swagger_auto_schema(
-        method="POST",
-        request_body=UserProfileSerializer,
-        responses={
-            200:"details: Creation de compte Electeur", 
-            400: "details: Invalid credentials"
-        }
-    )
-    @action(detail=False, methods=['POST'])
-    def register(self, request):
-        print("login starts")
-        serializer = UserProfileSerializer(data=request.data)
-        res = {
-            "details": "Creation de compte Electeur",
-        }
-        if(serializer.is_valid()):
-            serializer.save()
-            res['success'] = True
-            res['data'] = serializer.data
-            return response.Response(res, status=status.HTTP_201_CREATED)
-        res['success'] = False
-        res['data'] = serializer.errors
-        return response.Response(res, status=status.HTTP_400_BAD_REQUEST)
+    # @swagger_auto_schema(
+    #     method="POST",
+    #     request_body=UserProfileSerializer,
+    #     responses={
+    #         200:"details: Creation de compte Electeur", 
+    #         400: "details: Invalid credentials"
+    #     }
+    # )
+    # @action(detail=False, methods=['POST'])
+    # def register(self, request):
+    #     print("login starts")
+    #     serializer = UserProfileSerializer(data=request.data)
+    #     res = {
+    #         "details": "Creation de compte Electeur",
+    #     }
+    #     if(serializer.is_valid()):
+    #         serializer.save()
+    #         res['success'] = True
+    #         res['data'] = serializer.data
+    #         return response.Response(res, status=status.HTTP_201_CREATED)
+    #     res['success'] = False
+    #     res['data'] = serializer.errors
+    #     return response.Response(res, status=status.HTTP_400_BAD_REQUEST)
 
     # @authentication_classes()
     @swagger_auto_schema(
@@ -55,7 +55,10 @@ class ConnexionView(viewsets.ViewSet):
             try:
                 user = CustomUser.objects.get(email=serializer.data["email"])
             except CustomUser.DoesNotExist:
-                raise Http404
+                return response.Response({
+                "succes": False,
+                "details": "Email or password incorrect"
+                }, status=status.HTTP_400_BAD_REQUEST)
 
             # checker son password
             if(not checkPassword(serializer.data["password"], user.password)):
@@ -64,9 +67,22 @@ class ConnexionView(viewsets.ViewSet):
                     "details": "Email or password incorrect"
                 }, status=status.HTTP_400_BAD_REQUEST)
             
+            serializer = CustomUserSerializer(user)
             return response.Response({
                 "access": createToken(user.id, user.email, str(os.getenv('SECRET_KEY')), 60*60),
-                "refresh": createToken(user.id, user.email, str(os.getenv('SECRET_KEY')), 1*24*60*60)
+                "refresh": createToken(user.id, user.email, str(os.getenv('SECRET_KEY')), 1*24*60*60),
+                "user": {
+                    "id": serializer.data["id"],
+                    "is_supervisor": serializer.data["is_supervisor"],
+                    "is_elector": serializer.data["is_elector"],
+                    "first_name": serializer.data["first_name"],
+                    "last_name": serializer.data["last_name"],
+                    "is_active": serializer.data["is_active"],
+                    "email": serializer.data["email"],
+                    "sex": serializer.data["sex"],
+                    "birth_date": serializer.data["birth_date"],
+                    "groups": serializer.data["groups"]
+                }
             }, status=status.HTTP_200_OK)
         return response.Response({
                 "succes": False,

@@ -10,3 +10,4 @@ bcrypt
 pyjwt
 django-cors-headers==4.8.0
 pandas
+xlrd
