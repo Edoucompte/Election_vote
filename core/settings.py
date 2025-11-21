@@ -34,7 +34,7 @@ ALLOWED_HOSTS = [
     '127.0.0.1'
 ]
 
-CORS_ALLOWED_ORIGINS = str(os.getenv('CORS_ALLOw_ORIGIN')).split(',')
+CORS_ALLOWED_ORIGINS = str(os.getenv('CORS_ALLOW_ORIGIN')).split(',')
 # Application definition
 
 INSTALLED_APPS = [
@@ -88,16 +88,12 @@ WSGI_APPLICATION = 'core.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',#str(os.getenv('DJANGO_DB_ENGINE')), #'django.db.backends.sqlite3', 
-        'NAME': BASE_DIR / 'db.sqlite3',#str(os.getenv('DJANGO_DB_ENGINE')), #BASE_DIR / 'db.sqlite3', 
-        #'USER': str(os.getenv('DJANGO_DB_NAME')),
-        #'HOST': str(os.getenv('DJANGO_DB_USER')),
-        #'PORT': str(os.getenv('DJANGO_DB_PORT')),
-        # 'ENGINE': 'django.db.backends.sqlite3', # str(os.getenv('DJANGO_DB_ENGINE')), 
-        # 'NAME': BASE_DIR / 'db.sqlite3',  #str(os.getenv('DJANGO_DB_ENGINE')), #
-        #'USER': str(os.getenv('DJANGO_DB_NAME')),
-        #'HOST': str(os.getenv('DJANGO_DB_USER')),
-        #'PORT': str(os.getenv('DJANGO_DB_PORT')),
+        'ENGINE': str(os.getenv('DJANGO_DB_ENGINE')), #'django.db.backends.sqlite3',
+        'NAME': str(os.getenv('DJANGO_DB_NAME')), #BASE_DIR / 'db.sqlite3',
+        'USER': str(os.getenv('DJANGO_DB_USER')),
+        'PASSWORD': str(os.getenv('DJANGO_DB_PASSWORD')),
+        'HOST': str(os.getenv('DJANGO_DB_HOST')),
+        'PORT': str(os.getenv('DJANGO_DB_PORT')),
     }
 }
 
