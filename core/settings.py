@@ -213,6 +213,7 @@ LOGGING = {
 EMAIL_BACKEND = str(os.getenv('EMAIL_BACKEND'))
 EMAIL_HOST = str(os.getenv('EMAIL_HOST'))
 EMAIL_PORT = str(os.getenv('EMAIL_PORT'))
+# print(type(EMAIL_BACKEND))
 # EMAIL_HOST_USER = str(os.getenv('EMAIL_HOST_USER')) or ''
 # EMAIL_HOST_PASSWORD = str(os.getenv('EMAIL_HOST_PASSWORD')) or ''
 # EMAIL_USE_TLS = str(os.getenv('EMAIL_USE_TLS')) 
