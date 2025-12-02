@@ -1,5 +1,5 @@
 
-from .user import CustomUserDetailView, CustomUserView, res, MassUserView, ResetUserPasswordView
+from .user import CustomUserDetailView, CustomUserView, res, MassUserView, ResetUserPasswordView, ConnectedUserView
 
 #from .electeur import ProfilElecteurDetailView, ProfilElecteurView
 from .authenticate import *

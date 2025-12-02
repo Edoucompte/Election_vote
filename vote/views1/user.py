@@ -12,7 +12,7 @@ from vote.paginations import CustomPaginator
 from rest_framework.pagination import PageNumberPagination
 from rest_framework import response, status, authentication, exceptions, permissions
 from vote.permissions import IsSupervisor
-from vote.serializers import CustomUserSerializer
+from vote.serializers import CustomUserSerializer, CandidateSerializer
 from django.http import Http404
 from django.contrib.auth.models import Group
 from django.contrib.auth.password_validation import validate_password
@@ -121,7 +121,7 @@ class CustomUserView(APIView):
         }
         if serializer.is_valid():
             serializer.save()
-            respons['success'] = True
+            respons['succes'] = True
             respons['data'] = serializer.data
             # reset_password_token = generate_random_string(60)
             try :
@@ -386,7 +386,7 @@ class ResetUserPasswordView(ViewSet):
                     res["errors"] = " Code d'acces invalide "
                     return response.Response( data= res, status= status.HTTP_400_BAD_REQUEST)
                 # validate_password(pwd)
-                # modification des informations
+                # modification des infor mations
                 setattr(user, 'password', hashPassword(pwd) )
                 user.token = None
                 user.token_expiration = None
@@ -404,5 +404,31 @@ class ResetUserPasswordView(ViewSet):
         return response.Response(
             data=res,
             status= status.HTTP_200_OK
+        )
+
+class ConnectedUserView(ViewSet):
+    # queryset = CustomUser.objects.all()
+    authentication_classes = (CustomAuthentication,)
+
+    @swagger_auto_schema(
+        operation_description="Returns conneted user candidatures list",
+        responses=res
+    )
+    @action(detail=False, methods=['get'])
+    def get_connected_user_candidatures(self, request):
+        res = {"details": "List des candidatures de l'utilisateur connecté"}
+        if request.user.is_authenticated :
+            candidatures_serializer = CandidateSerializer(request.user.candidate.all(), many=True)
+            res["success"] = True
+            res['data']= candidatures_serializer.data
+            return response.Response(
+                data=res,
+                status=status.HTTP_200_OK
+            )
+        res["success"]= False
+        res["errors"] = "Non Authentifie"
+        return response.Response(
+            data=res,
+            status=status.HTTP_403_FORBIDDEN
         )
 
