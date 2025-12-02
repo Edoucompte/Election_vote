@@ -20,7 +20,7 @@ class ElectionView(APIView):
     )
     def get(self, request, *args, **kwargs):
         if request.user.is_authenticated and  request.user.has_perm('vote.view_election'):
-            elections = Election.objects.prefetch_related('supervisor','electors', 'candidates').all()
+            elections = Election.objects.select_related('supervisor').prefetch_related('electors', 'candidates').all()
             # paginator =PageNumberPagination()
             # paginator_queryset = paginator.paginate_queryset(elections, request)
             serializer = ElectionSerializer(elections, many=True)
