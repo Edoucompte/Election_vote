@@ -26,6 +26,7 @@ import pandas as pd
 import random
 import string
 from datetime import timedelta, datetime
+from django.utils import timezone
 
 from vote.serializers.user import UserListSerializer, UsersFileSerializer
 
@@ -431,4 +432,40 @@ class ConnectedUserView(ViewSet):
             data=res,
             status=status.HTTP_403_FORBIDDEN
         )
+
+    @swagger_auto_schema(
+        operation_description="Create a candidature for the connected user",
+        request_body=openapi.Schema(
+            description="Request body for candidature creation",
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'election': openapi.Schema(type=openapi.TYPE_INTEGER, description="id election"),
+                'description': openapi.Schema(type=openapi.TYPE_STRING, description="description"),
+            },
+            required=['election'],
+        ),
+        responses=res
+    )
+    @action(detail=False, methods=['post'])
+    def create_connected_user_candidature(self, request):
+        res = {"details": "Creation de candidature"}
+        if request.user.is_authenticated and request.user.has_perm('vote.add_candidate'):
+            data = {
+                "candidate": request.user.id,
+                "election": request.data.get("election"),
+                "description": request.data.get("description"),
+                "date_candidature": timezone.now(),
+            }
+            serializer = CandidateSerializer(data=data)
+            if serializer.is_valid():
+                serializer.save()
+                res["success"] = True
+                res["data"] = serializer.data
+                return response.Response(res, status=status.HTTP_201_CREATED)
+            res["success"] = False
+            res["errors"] = serializer.errors
+            return response.Response(res, status=status.HTTP_400_BAD_REQUEST)
+        res["success"] = False
+        res["errors"] = "Access denied"
+        return response.Response(res, status=status.HTTP_403_FORBIDDEN)
 

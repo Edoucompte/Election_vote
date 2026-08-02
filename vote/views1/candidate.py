@@ -26,13 +26,10 @@ class CandidateView(APIView):
             if request.user.is_supervisor:
                 candidates = Candidate.objects.all()
             else:
-                candidates = Candidate.objects.filter(candidate_id= request.user.id) 
-            paginator =PageNumberPagination()
-            paginator_queryset = paginator.paginate_queryset(candidates, request)
-            serializer = CandidateSerializer(paginator_queryset, many=True)
-            # print("results", paginator.get_results(serializer.data))
+                candidates = Candidate.objects.filter(candidate_id= request.user.id)
+            serializer = CandidateSerializer(candidates, many=True)
             return response.Response({
-                "data": CustomPaginator.format_json_response(paginator, serializer.data), # , serializer.data
+                "data": serializer.data,
                 "details": "Liste des candidatures",
                 "succes": True
             }, status=status.HTTP_200_OK)
@@ -202,7 +199,7 @@ class CandidateListView(APIView):
             Retourne la liste de candidats a une election donee
         '''
         if request.user.is_authenticated and  request.user.is_active:
-            candidates = Candidate.objects.filter(is_accepted= True, election_id= election_id) 
+            candidates = Candidate.objects.filter(status='accepte', election_id= election_id)
             paginator = PageNumberPagination()
             paginator_queryset = paginator.paginate_queryset(candidates, request)
             serializer = CandidateSerializer(paginator_queryset, many=True)

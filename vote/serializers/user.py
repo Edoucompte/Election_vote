@@ -15,11 +15,6 @@ class UserListSerializer(serializers.ListSerializer):
         users = [CustomUser(**user) for user in validated_data]
         return CustomUser.objects.bulk_create(users)
 
-class UserListSerializer(serializers.ListSerializer):
-    def create(self, validated_data):
-        users = [CustomUser(**user) for user in validated_data]
-        return CustomUser.objects.bulk_create(users)
-
 class CustomUserSerializer(serializers.ModelSerializer):
     # password = serializers.CharField(read_only=True)
 

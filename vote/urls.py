@@ -29,7 +29,10 @@ urlpatterns = [
     path('users/', CustomUserView.as_view(), name='User view'),
     path('users/<int:pk>/', CustomUserDetailView.as_view(), name='User detail view'),
     path('users/mass/', MassUserView.as_view()),
-    path('users/me/candidatures/', ConnectedUserView.as_view({'get': 'get_connected_user_candidatures'}), name='Connected user view'),
+    path('users/candidatures/', ConnectedUserView.as_view({
+        'get': 'get_connected_user_candidatures',
+        'post': 'create_connected_user_candidature'
+    }), name='Connected user view'),
     path('elections/', ElectionView.as_view()),
     path('elections/<int:pk>/', ElectionDetailView.as_view()),
     path('elections/<int:election_id>/candidates/', CandidateListView.as_view(), name='Approuved candidates list'),
