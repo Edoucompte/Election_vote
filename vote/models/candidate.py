@@ -8,7 +8,11 @@ class Candidate(models.Model):
     election = models.ForeignKey(Election, on_delete=models.CASCADE, related_name='election_candidature')
     date_candidature = models.DateTimeField()
     description = models.CharField(blank=True)
-    is_accepted = models.CharField(default=False)
+    status = models.CharField(max_length=100, choices=[
+        ('en_attente', 'En attente'),
+        ('accepte', 'Accepté'),
+        ('rejete', 'Rejeté'),
+    ], default='en_attente')
     reject_message = models.CharField(blank=True)
 
     class Meta:
