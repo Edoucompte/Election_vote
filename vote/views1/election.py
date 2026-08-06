@@ -20,7 +20,9 @@ class ElectionView(APIView):
     )
     def get(self, request, *args, **kwargs):
         if request.user.is_authenticated and  request.user.has_perm('vote.view_election'):
-            elections = Election.objects.select_related('supervisor').prefetch_related('electors', 'candidates').all()
+            elections = Election.objects.select_related('supervisor').prefetch_related('electors', 'candidates').filter(
+                organisation=request.user.organisation
+            )
             # paginator =PageNumberPagination()
             # paginator_queryset = paginator.paginate_queryset(elections, request)
             serializer = ElectionSerializer(elections, many=True)
@@ -55,12 +57,16 @@ class ElectionView(APIView):
     def post(self, request):
         #print("request in post election view", request.data.keys())
         if request.user.is_authenticated and  request.user.has_perm('vote.add_election'):
-            data = request.data
-            data ["supervisor"] = request.user.id
-            serializer = ElectionSerializer(data=data)
+            if not request.user.organisation_id:
+                return response.Response({
+                    "details": "Vous devez appartenir à une organisation pour créer une élection.",
+                    "succes": False
+                }, status=status.HTTP_400_BAD_REQUEST)
+            # organisation/supervisor sont read-only sur le serializer : ils sont
+            # fixés ici depuis l'utilisateur connecté, jamais depuis le corps envoyé.
+            serializer = ElectionSerializer(data=request.data)
             if serializer.is_valid():
-                # print(serializer.data)
-                serializer.save()
+                serializer.save(supervisor=request.user, organisation=request.user.organisation)
                 return response.Response(serializer.data, status=status.HTTP_201_CREATED)
             print(serializer.errors)
             return response.Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -68,24 +74,27 @@ class ElectionView(APIView):
             "details": "Access denied",
             "succes": False
         }, status=status.HTTP_403_FORBIDDEN)
-        
+
 
 class ElectionDetailView(APIView):
     authentication_classes = [CustomAuthentication]
     # permission_classes = [ IsSupervisor ]
-    def get_object(self, pk):
+    def get_object(self, pk, organisation):
         try:
-            return Election.objects.get(pk=pk)
+            # Filtrer par organisation ici est ce qui empêche un superviseur
+            # d'une organisation de voir/modifier/supprimer l'élection d'une
+            # autre organisation, même en devinant son id (404 dans ce cas).
+            return Election.objects.get(pk=pk, organisation=organisation)
         except Election.DoesNotExist:
             raise Http404
-       
+
     @swagger_auto_schema(
         operation_description="Returns a single election details",
         responses= res
-    ) 
+    )
     def get(self, request, pk):
         if request.user.is_authenticated and  request.user.has_perm('vote.view_election'):
-            election = self.get_object(pk)
+            election = self.get_object(pk, request.user.organisation)
             serializer = ElectionSerializer(election)
             res = {
                 "data": serializer.data,
@@ -115,7 +124,7 @@ class ElectionDetailView(APIView):
     )
     def put(self, request, pk, *args, **kwargs):
         if request.user.is_authenticated and  request.user.has_perm('vote.change_election'):
-            election = self.get_object(pk)
+            election = self.get_object(pk, request.user.organisation)
             serializer = ElectionSerializer(election, data=request.data, partial=True)
             if(serializer.is_valid()):
                 serializer.save()
@@ -137,7 +146,7 @@ class ElectionDetailView(APIView):
     )
     def delete(self, request, pk, *args, **kwargs):
         if request.user.is_authenticated and  request.user.has_perm('vote.delete_election'):
-            election = self.get_object(pk)
+            election = self.get_object(pk, request.user.organisation)
             election.delete()
             return response.Response(status=status.HTTP_204_NO_CONTENT)
         return response.Response({

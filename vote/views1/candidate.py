@@ -1,4 +1,4 @@
-from vote.models import Candidate
+from vote.models import Candidate, Election
 from vote.serializers import CandidateSerializer
 from rest_framework.views import APIView
 from rest_framework import response, status
@@ -24,7 +24,7 @@ class CandidateView(APIView):
 
         if request.user.is_authenticated and  request.user.has_perm('vote.view_candidate'):
             if request.user.is_supervisor:
-                candidates = Candidate.objects.all()
+                candidates = Candidate.objects.filter(election__organisation=request.user.organisation)
             else:
                 candidates = Candidate.objects.filter(candidate_id= request.user.id)
             serializer = CandidateSerializer(candidates, many=True)
@@ -55,6 +55,16 @@ class CandidateView(APIView):
     )
     def post(self, request):
         if request.user.is_authenticated and  request.user.has_perm('vote.add_candidate'):
+            # Empêche de candidater à une élection d'une autre organisation,
+            # même en connaissant/devinant son id.
+            election = Election.objects.filter(
+                pk=request.data.get('election'), organisation=request.user.organisation
+            ).first()
+            if election is None:
+                return response.Response({
+                    "succes": False,
+                    "errors": "Élection introuvable."
+                }, status=status.HTTP_404_NOT_FOUND)
             data = request.data
             data ["candidate"] = request.user.id
             serializer = CandidateSerializer(data=request.data)
@@ -74,19 +84,19 @@ class CandidateDetailView(APIView):
     authentication_classes = [CustomAuthentication]
     permission_classes = [DjangoModelPermissions]
     
-    def get_object(self, pk):
+    def get_object(self, pk, organisation):
         try:
-            return Candidate.objects.get(pk=pk)
+            return Candidate.objects.get(pk=pk, election__organisation=organisation)
         except Candidate.DoesNotExist:
             return None
 
     @swagger_auto_schema(
         operation_description="Returns a single candidate details",
         responses= res
-    ) 
+    )
     def get(self, request, pk):
         if request.user.is_authenticated and  request.user.has_perm('vote.view_candidate'):
-            candidate = self.get_object(pk)
+            candidate = self.get_object(pk, request.user.organisation)
             if not candidate:
                 return response.Response(
                     {
@@ -110,7 +120,7 @@ class CandidateDetailView(APIView):
     )    
     def put(self, request, pk):
         if request.user.is_authenticated and  request.user.has_perm('vote.change_candidate'):
-            candidate = self.get_object(pk)
+            candidate = self.get_object(pk, request.user.organisation)
             if not candidate:
                 return response.Response(
                     {
@@ -139,7 +149,7 @@ class CandidateDetailView(APIView):
     )
     def delete(self, request, pk):
         if request.user.is_authenticated and  request.user.has_perm('vote.delete_candidate'):
-            candidate= self.get_object(pk)
+            candidate= self.get_object(pk, request.user.organisation)
             if not candidate:
                 return response.Response(
                     {"succes": False, "errors": "Candidature non trouvée"},
@@ -156,20 +166,22 @@ class CandidateApprouveView(APIView):
     authentication_classes = [CustomAuthentication]
     # permission_classes = [ DjangoModelPermissions] # only for supervisor or admin
     
-    def get_object(self, pk):
+    def get_object(self, pk, organisation):
         try:
-            return Candidate.objects.get(pk=pk)
+            # Sans ce filtre, n'importe quel superviseur pouvait approuver/rejeter
+            # la candidature d'une autre organisation en devinant son id.
+            return Candidate.objects.get(pk=pk, election__organisation=organisation)
         except Candidate.DoesNotExist:
             return None
-    
+
     @swagger_auto_schema(
         operation_description="Modify a single candidature details",
         request_body=CandidateApprouveSerializer,
         responses= res
-    )    
+    )
     def put(self, request, pk):
         if request.user.is_authenticated and  request.user.is_supervisor:
-            candidate = self.get_object(pk)
+            candidate = self.get_object(pk, request.user.organisation)
             if not candidate:
                 return response.Response(
                     { "succes": False, "error": "Candidature non trouvée"},
@@ -199,7 +211,9 @@ class CandidateListView(APIView):
             Retourne la liste de candidats a une election donee
         '''
         if request.user.is_authenticated and  request.user.is_active:
-            candidates = Candidate.objects.filter(status='accepte', election_id= election_id)
+            candidates = Candidate.objects.filter(
+                status='accepte', election_id=election_id, election__organisation=request.user.organisation
+            )
             paginator = PageNumberPagination()
             paginator_queryset = paginator.paginate_queryset(candidates, request)
             serializer = CandidateSerializer(paginator_queryset, many=True)

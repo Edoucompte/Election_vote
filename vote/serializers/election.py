@@ -7,6 +7,10 @@ class ElectionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Election
         fields = '__all__'
+        # organisation/supervisor sont fixés côté serveur (vue) à partir de
+        # l'utilisateur connecté : un client ne doit jamais pouvoir déplacer
+        # une élection vers une autre organisation via le corps de la requête.
+        read_only_fields = ['organisation', 'supervisor']
 
     def validate(self, data):
         print("Inside validate :")

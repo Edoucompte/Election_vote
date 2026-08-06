@@ -1,6 +1,7 @@
 from django.db import models
 
 from vote.models.user import CustomUser
+from vote.models.organisation import Organisation
 
 class Election(models.Model):
     name = models.CharField(max_length= 100)
@@ -12,6 +13,9 @@ class Election(models.Model):
         ('en_cours', 'En cours'),
         ('terminee', 'Terminée')
     ], default='a_venir')
+    # Organisation propriétaire de l'élection : toute la logique de cloisonnement
+    # (listes, détails, vote, candidatures, résultats) filtre par ce champ.
+    organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE, related_name='elections')
     supervisor = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='supervisor')
     electors = models.ManyToManyField(CustomUser, through="Vote", through_fields=('election', 'elector')) # cles etrangeres a preciser pour le vote
     candidates = models.ManyToManyField(CustomUser, through="Candidate", related_name='candidates') 

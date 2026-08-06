@@ -30,7 +30,11 @@ class CustomUserSerializer(serializers.ModelSerializer):
         # fields = ['id', 'first_name', 'last_name', 'email', 'sexe', 'date_joined', 'date_naissance', 'matricule', 'is_active', 'is_staff']
         exclude = ('is_staff', 'is_superuser', 'user_permissions')
         #read_only_fields = ['token', 'token_expiration', 'password']
-        read_only_fields = [ 'password']
+        # organisation est fixée côté serveur (vue) à partir de l'utilisateur
+        # connecté : jamais depuis le corps de la requête, sinon un client
+        # pourrait se déplacer (ou déplacer un utilisateur qu'il gère) vers
+        # une autre organisation.
+        read_only_fields = ['password', 'organisation']
     
     # def to_internal_value(self, data):
     #     data['token'] = generate_random_string(60)

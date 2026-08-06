@@ -1,6 +1,6 @@
 from rest_framework.views import APIView
 from rest_framework import response, status
-from vote.models import Vote
+from vote.models import Vote, Election
 from vote.serializers import VoteSerializer
 from django.http import Http404
 from drf_yasg import openapi
@@ -39,9 +39,24 @@ class VoteView(APIView):
         # manual_parameters=openapi.Parameter(name="elector_")
         responses= res
     )
-    def post(self, request, election_id):
+    def post(self, request):
+        # NB : le paramètre `election_id` a été retiré, l'URL `votes/` ne le
+        # fournit pas (elle ne le fournissait jamais : cet endpoint plantait
+        # systématiquement en TypeError avant ce correctif). L'id de l'élection
+        # est lu depuis le corps de la requête, comme documenté par le schéma
+        # swagger ci-dessus.
         if request.user.is_authenticated and  request.user.has_perm('vote.add_vote'):
-            data = request.data 
+            # Empêche de voter pour une élection d'une autre organisation,
+            # même en connaissant/devinant son id.
+            election = Election.objects.filter(
+                pk=request.data.get('election'), organisation=request.user.organisation
+            ).first()
+            if election is None:
+                return response.Response({
+                    "succes": False,
+                    "errors": "Élection introuvable."
+                }, status=status.HTTP_404_NOT_FOUND)
+            data = request.data
             data["elector"] = request.user.id # injection of elector from connected user
             serializer = VoteSerializer(data=data)
             if(serializer.is_valid()):

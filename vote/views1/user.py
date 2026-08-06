@@ -1,7 +1,8 @@
 from django.core.exceptions import ValidationError
+from django.db import transaction
 
 from vote.encryption.password_encryption import hashPassword
-from vote.models import CustomUser
+from vote.models import CustomUser, Election, Organisation
 from rest_framework.views import APIView
 
 from rest_framework.viewsets import ViewSet
@@ -80,7 +81,7 @@ class CustomUserView(APIView):
     def get(self, request, *args, **kwargs):
 
         if request.user.is_authenticated and  request.user.has_perm('vote.view_cutomuser'):
-            users = CustomUser.objects.all()
+            users = CustomUser.objects.filter(organisation=request.user.organisation)
             # paginator =PageNumberPagination()
             # paginator_queryset = paginator.paginate_queryset(users, request)
             serializer = CustomUserSerializer(users, many=True)
@@ -121,7 +122,43 @@ class CustomUserView(APIView):
             "details": "Creation d'utilisateur",
         }
         if serializer.is_valid():
-            serializer.save()
+            # organisation est en lecture seule sur le serializer : on la
+            # détermine ici, jamais depuis le corps de la requête.
+            #  - un membre authentifié d'une organisation crée un nouvel
+            #    utilisateur (électeur ou co-superviseur) dans SA organisation ;
+            #  - une requête non authentifiée ne peut créer qu'un compte
+            #    superviseur, qui démarre alors sa propre organisation
+            #    (bootstrap minimal, en attendant une vraie page d'inscription) ;
+            #  - une requête non authentifiée ne peut pas créer d'électeur seul
+            #    (il doit être rattaché à une organisation existante).
+            requester = request.user if request.user.is_authenticated else None
+            wants_supervisor = bool(serializer.validated_data.get('is_supervisor'))
+
+            if requester is not None and requester.organisation_id:
+                organisation = requester.organisation
+                new_organisation_created = False
+            elif wants_supervisor:
+                organisation_name = (request.data.get('organisation_name') or '').strip()
+                if not organisation_name:
+                    full_name = f"{serializer.validated_data.get('first_name', '')} {serializer.validated_data.get('last_name', '')}".strip()
+                    organisation_name = f"Organisation de {full_name}" if full_name else "Nouvelle organisation"
+                organisation = None
+                new_organisation_created = True
+            else:
+                respons['succes'] = False
+                respons['errors'] = "Authentification requise pour créer un électeur."
+                return response.Response(respons, status=status.HTTP_403_FORBIDDEN)
+
+            # Transaction : si la création de l'utilisateur échoue, on ne veut
+            # pas laisser une organisation orpheline (sans propriétaire ni membre).
+            with transaction.atomic():
+                if new_organisation_created:
+                    organisation = Organisation.objects.create(name=organisation_name)
+                user = serializer.save(organisation=organisation)
+                if organisation.owner_id is None:
+                    organisation.owner = user
+                    organisation.save(update_fields=['owner'])
+
             respons['succes'] = True
             respons['data'] = serializer.data
             # reset_password_token = generate_random_string(60)
@@ -160,19 +197,21 @@ class CustomUserDetailView(APIView):
     # permission_classes =[IsAuthenticatedOrReadOnly]
 
 
-    def get_object(self, pk):
+    def get_object(self, pk, organisation):
         try:
-            return CustomUser.objects.get(pk=pk)
+            # Cloisonnement : un membre d'une organisation ne peut consulter,
+            # modifier ou supprimer que des utilisateurs de SA organisation.
+            return CustomUser.objects.get(pk=pk, organisation=organisation)
         except CustomUser.DoesNotExist:
             raise Http404
 
     @swagger_auto_schema(
         operation_description="Returns users list",
         responses=res
-    ) 
+    )
     def get(self, request, pk):
         if request.user.is_authenticated and request.user.has_perm('vote.view_customuser'):
-            user = self.get_object(pk)
+            user = self.get_object(pk, request.user.organisation)
             serializer = CustomUserSerializer(user)
             res = {
                 "data": serializer.data,
@@ -192,7 +231,15 @@ class CustomUserDetailView(APIView):
         responses= res
     )
     def put(self, request, pk, *args, **kwargs):
-        user = self.get_object(pk)
+        # NB : cette méthode ne vérifiait auparavant ni l'authentification ni
+        # l'organisation, ce qui permettait de modifier n'importe quel
+        # utilisateur (même d'une autre organisation) sans être connecté.
+        if not request.user.is_authenticated:
+            return response.Response({
+                "details": "Access denied",
+                "succes": False
+            }, status=status.HTTP_403_FORBIDDEN)
+        user = self.get_object(pk, request.user.organisation)
         serializer = CustomUserSerializer(user, data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -209,7 +256,13 @@ class CustomUserDetailView(APIView):
         }
     )
     def delete(self, request, pk, *args, **kwargs):
-        user = self.get_object(pk)
+        # Même remarque que pour put() : auth + organisation désormais requises.
+        if not request.user.is_authenticated:
+            return response.Response({
+                "details": "Access denied",
+                "succes": False
+            }, status=status.HTTP_403_FORBIDDEN)
+        user = self.get_object(pk, request.user.organisation)
         user.delete()
         return response.Response(status= status.HTTP_204_NO_CONTENT)
 
@@ -243,6 +296,16 @@ class MassUserView(APIView):
         # print(request.FILES) # MultiValueDict dict of uploaded files
         #file_serializer = UsersFileSerializer(data=request.Files['creation'])
 
+        # NB : cette méthode ne vérifiait auparavant ni l'authentification ni
+        # l'organisation, ce qui permettait un import d'électeurs anonyme, non
+        # rattaché à aucune organisation.
+        if not (request.user.is_authenticated and request.user.organisation_id):
+            return response.Response({
+                "details": "Creation d'utilisateurs",
+                "succes": False,
+                "errors": "Authentification requise pour importer des électeurs."
+            }, status=status.HTTP_403_FORBIDDEN)
+
         file_serializer = UsersFileSerializer(data=request.data)
         # print('request ', request.FILES['creation'])
         res = {
@@ -267,8 +330,11 @@ class MassUserView(APIView):
                 # print('data ', data)
                 serializer = CustomUserSerializer(data=data, many=True)
                 serializer.is_valid(raise_exception=True)
-                serializer.save()
-                
+                # organisation est read-only sur le serializer : tous les
+                # électeurs importés sont rattachés à l'organisation de
+                # l'utilisateur qui fait l'import, jamais à une valeur du fichier.
+                serializer.save(organisation=request.user.organisation)
+
                 ids = [user['id'] for user in serializer.data ]
                 newUserAdded = CustomUser.objects.filter(id__in=ids)
                 elector_group, created = Group.objects.get_or_create("Elector")
@@ -450,9 +516,18 @@ class ConnectedUserView(ViewSet):
     def create_connected_user_candidature(self, request):
         res = {"details": "Creation de candidature"}
         if request.user.is_authenticated and request.user.has_perm('vote.add_candidate'):
+            # Empêche de candidater à une élection d'une autre organisation,
+            # même en connaissant/devinant son id.
+            election = Election.objects.filter(
+                pk=request.data.get('election'), organisation=request.user.organisation
+            ).first()
+            if election is None:
+                res["success"] = False
+                res["errors"] = "Élection introuvable."
+                return response.Response(res, status=status.HTTP_404_NOT_FOUND)
             data = {
                 "candidate": request.user.id,
-                "election": request.data.get("election"),
+                "election": election.id,
                 "description": request.data.get("description"),
                 "date_candidature": timezone.now(),
             }
