@@ -60,6 +60,15 @@ class ConnexionView(viewsets.ViewSet):
                 "details": "Email or password incorrect"
                 }, status=status.HTTP_400_BAD_REQUEST)
 
+            # Un compte créé par un superviseur n'a pas encore de mot de passe
+            # tant que l'électeur n'a pas suivi le lien reçu par mail : sans ce
+            # garde-fou, checkPassword plantait ici en 500 (None.encode(...)).
+            if not user.password:
+                return response.Response({
+                    "succes": False,
+                    "details": "Mot de passe non défini. Utilisez le lien reçu par e-mail pour en choisir un."
+                }, status=status.HTTP_400_BAD_REQUEST)
+
             # checker son password
             if(not checkPassword(serializer.data["password"], user.password)):
                 return response.Response({

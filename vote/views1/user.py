@@ -446,22 +446,31 @@ class ResetUserPasswordView(ViewSet):
             #rechercher par token
             user = CustomUser.objects.get(token=request.data["token"])
             pwd = request.data.get("password")
+            if not pwd:
+                res['success'] = False
+                res["errors"] = "Mot de passe requis"
+                return response.Response(data=res, status=status.HTTP_400_BAD_REQUEST)
             try :
                 #validation
                 if user.token_expiration.timestamp() < datetime.now().timestamp() :
                     res['success'] = False
                     res["errors"] = " Code d'acces invalide "
                     return response.Response( data= res, status= status.HTTP_400_BAD_REQUEST)
-                # validate_password(pwd)
+                # Applique les règles de robustesse configurées dans
+                # AUTH_PASSWORD_VALIDATORS (settings.py) : c'était appelé nulle
+                # part avant, n'importe quel mot de passe (y compris trivial)
+                # était accepté ici — le seul endroit de l'app où un utilisateur
+                # définit réellement son mot de passe.
+                validate_password(pwd, user=user)
                 # modification des infor mations
                 setattr(user, 'password', hashPassword(pwd) )
                 user.token = None
                 user.token_expiration = None
                 user.save()
             except ValidationError as e:
-                # message d'erreur
+                # message d'erreur (liste des règles non respectées)
                 res['success']= False
-                res["errors"] = " Mot de passe invalide "
+                res["errors"] = list(e.messages)
                 return response.Response( data= res, status= status.HTTP_400_BAD_REQUEST)
             #user['password'] = hashPassword(password) #.set_password(password)
         except CustomUser.DoesNotExist:

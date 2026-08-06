@@ -3,6 +3,7 @@ from rest_framework import response, status
 from vote.models import Vote, Election
 from vote.serializers import VoteSerializer
 from django.http import Http404
+from django.utils import timezone
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from vote.views1.user import CustomAuthentication, res
@@ -56,6 +57,18 @@ class VoteView(APIView):
                     "succes": False,
                     "errors": "Élection introuvable."
                 }, status=status.HTTP_404_NOT_FOUND)
+            # Un vote hors de la fenêtre begin_date/end_date n'était jusqu'ici
+            # jamais rejeté par l'API (seul le front empêchait l'accès, ce qui
+            # ne protège rien contre un appel direct à l'API).
+            now = timezone.now()
+            if not (election.begin_date <= now <= election.end_date):
+                return response.Response({
+                    "succes": False,
+                    "errors": "Le vote n'est pas ouvert pour cette élection."
+                }, status=status.HTTP_400_BAD_REQUEST)
+            # NB : le double vote est déjà rejeté proprement par la contrainte
+            # unique (elector, election) du modèle, exposée automatiquement par
+            # VoteSerializer comme erreur de validation (vérifié).
             data = request.data
             data["elector"] = request.user.id # injection of elector from connected user
             serializer = VoteSerializer(data=data)
