@@ -6,6 +6,8 @@ from vote.views1.election import ElectionDetailView, ElectionView
 from vote.views1.user import CustomUserDetailView, CustomUserView, MassUserView, ResetUserPasswordView, \
     ConnectedUserView
 from vote.views1.vote import VoteDetailView, VoteView
+from vote.views1.stats import ElectionResultsView, ElectionStatsView, OrganisationStatsView, ElectorStatsView, \
+    SendElectionResultsView
 
 
 #from vote.views1 import CustomUserDetailView, CustomUserView, ProfilElecteurDetailView, ProfilElecteurView
@@ -36,7 +38,11 @@ urlpatterns = [
     path('elections/', ElectionView.as_view()),
     path('elections/<int:pk>/', ElectionDetailView.as_view()),
     path('elections/<int:election_id>/candidates/', CandidateListView.as_view(), name='Approuved candidates list'),
-    # path('elections/<int:election_id>/resultats/', CandidateListView.as_view(), name='Elections results'),
+    path('elections/<int:pk>/results/', ElectionResultsView.as_view(), name='Election results'),
+    path('elections/<int:pk>/stats/', ElectionStatsView.as_view(), name='Election stats'),
+    path('elections/<int:pk>/send-results/', SendElectionResultsView.as_view(), name='Send election results'),
+    path('organisations/me/stats/', OrganisationStatsView.as_view(), name='Organisation stats'),
+    path('electeur/stats/', ElectorStatsView.as_view(), name='Elector stats'),
     path('candidatures/', CandidateView.as_view()),
     path('candidatures/<int:pk>/', CandidateDetailView.as_view()),
     path('candidatures/<int:pk>/approuve/', CandidateApprouveView.as_view()),
