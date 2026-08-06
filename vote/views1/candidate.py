@@ -5,7 +5,7 @@ from rest_framework import response, status
 from django.http import Http404
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
-from vote.serializers.candidate import CandidateApprouveSerializer
+from vote.serializers.candidate import CandidateApprouveSerializer, PublicCandidateSerializer
 from vote.views1.user import CustomAuthentication, res
 from vote.paginations import CustomPaginator
 from rest_framework.pagination import PageNumberPagination
@@ -213,10 +213,10 @@ class CandidateListView(APIView):
         if request.user.is_authenticated and  request.user.is_active:
             candidates = Candidate.objects.filter(
                 status='accepte', election_id=election_id, election__organisation=request.user.organisation
-            )
+            ).select_related('candidate')
             paginator = PageNumberPagination()
             paginator_queryset = paginator.paginate_queryset(candidates, request)
-            serializer = CandidateSerializer(paginator_queryset, many=True)
+            serializer = PublicCandidateSerializer(paginator_queryset, many=True)
             # print("results", paginator.get_results(serializer.data))
             return response.Response({
                 "data": CustomPaginator.format_json_response(paginator, serializer.data), # , serializer.data

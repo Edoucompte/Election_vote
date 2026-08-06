@@ -1,4 +1,4 @@
-from .candidate import CandidateSerializer, CandidateApprouveSerializer
+from .candidate import CandidateSerializer, CandidateApprouveSerializer, PublicCandidateSerializer
 from .election import ElectionSerializer
 from .login import *
 from .user import CustomUserSerializer, UserProfileSerializer, UsersFileSerializer

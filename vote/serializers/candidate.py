@@ -8,6 +8,18 @@ class CandidateSerializer(serializers.ModelSerializer):
         model = Candidate
         fields = '__all__'
 
+
+class PublicCandidateSerializer(serializers.ModelSerializer):
+    """Candidate list a voter sees: no raw FK id resolution needed on the front."""
+    candidate_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Candidate
+        fields = ['id', 'election', 'candidate', 'candidate_name', 'description']
+
+    def get_candidate_name(self, obj):
+        return f"{obj.candidate.first_name} {obj.candidate.last_name}".strip()
+
 class CandidateApprouveSerializer(serializers.ModelSerializer):
     class Meta:
         model = Candidate
