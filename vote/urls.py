@@ -8,6 +8,8 @@ from vote.views1.user import CustomUserDetailView, CustomUserView, MassUserView,
 from vote.views1.vote import VoteDetailView, VoteView
 from vote.views1.stats import ElectionResultsView, ElectionStatsView, OrganisationStatsView, ElectorStatsView, \
     SendElectionResultsView
+from vote.views1.signup import SignupView
+from vote.views1.invitation import InvitationView, InvitationDetailView, InvitationAcceptView
 
 
 #from vote.views1 import CustomUserDetailView, CustomUserView, ProfilElecteurDetailView, ProfilElecteurView
@@ -43,6 +45,14 @@ urlpatterns = [
     path('elections/<int:pk>/send-results/', SendElectionResultsView.as_view(), name='Send election results'),
     path('organisations/me/stats/', OrganisationStatsView.as_view(), name='Organisation stats'),
     path('electeur/stats/', ElectorStatsView.as_view(), name='Elector stats'),
+    path('auth/signup/', SignupView.as_view(), name='Signup'),
+    path('organisations/invitations/', InvitationView.as_view(), name='Invitation list/create'),
+    path('organisations/invitations/<int:pk>/', InvitationDetailView.as_view(), name='Invitation revoke'),
+    path(
+        'organisations/invitations/<str:token>/accept/',
+        InvitationAcceptView.as_view(),
+        name='Invitation accept',
+    ),
     path('candidatures/', CandidateView.as_view()),
     path('candidatures/<int:pk>/', CandidateDetailView.as_view()),
     path('candidatures/<int:pk>/approuve/', CandidateApprouveView.as_view()),
