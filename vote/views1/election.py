@@ -9,6 +9,7 @@ from drf_yasg.utils import swagger_auto_schema
 from vote.views1.user import CustomAuthentication, res
 from vote.paginations import CustomPaginator
 from rest_framework.pagination import PageNumberPagination
+from vote.services.quota import check_election_quota
 
 class ElectionView(APIView):
     # permission_classes = [ IsSupervisor ]
@@ -62,6 +63,10 @@ class ElectionView(APIView):
                     "details": "Vous devez appartenir à une organisation pour créer une élection.",
                     "succes": False
                 }, status=status.HTTP_400_BAD_REQUEST)
+            # Quota guard: block creation once the org's plan election limit is reached.
+            quota_error = check_election_quota(request.user.organisation)
+            if quota_error:
+                return response.Response({"details": quota_error, "succes": False}, status=status.HTTP_403_FORBIDDEN)
             # organisation/supervisor sont read-only sur le serializer : ils sont
             # fixés ici depuis l'utilisateur connecté, jamais depuis le corps envoyé.
             serializer = ElectionSerializer(data=request.data)

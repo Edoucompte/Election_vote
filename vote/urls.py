@@ -10,6 +10,7 @@ from vote.views1.stats import ElectionResultsView, ElectionStatsView, Organisati
     SendElectionResultsView
 from vote.views1.signup import SignupView
 from vote.views1.invitation import InvitationView, InvitationDetailView, InvitationAcceptView
+from vote.views1.subscription import OrganisationSubscriptionView, SubscriptionCheckoutView, StripeWebhookView
 
 
 #from vote.views1 import CustomUserDetailView, CustomUserView, ProfilElecteurDetailView, ProfilElecteurView
@@ -53,6 +54,13 @@ urlpatterns = [
         InvitationAcceptView.as_view(),
         name='Invitation accept',
     ),
+    path('organisations/me/subscription/', OrganisationSubscriptionView.as_view(), name='Organisation subscription'),
+    path(
+        'organisations/me/subscription/checkout/',
+        SubscriptionCheckoutView.as_view(),
+        name='Subscription checkout',
+    ),
+    path('webhooks/stripe/', StripeWebhookView.as_view(), name='Stripe webhook'),
     path('candidatures/', CandidateView.as_view()),
     path('candidatures/<int:pk>/', CandidateDetailView.as_view()),
     path('candidatures/<int:pk>/approuve/', CandidateApprouveView.as_view()),

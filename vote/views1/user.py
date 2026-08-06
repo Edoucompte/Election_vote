@@ -30,6 +30,7 @@ from datetime import timedelta, datetime
 from django.utils import timezone
 
 from vote.serializers.user import UserListSerializer, UsersFileSerializer
+from vote.services.quota import check_elector_quota
 
 res = {
     200: " Success ",
@@ -151,13 +152,26 @@ class CustomUserView(APIView):
 
             # Transaction : si la création de l'utilisateur échoue, on ne veut
             # pas laisser une organisation orpheline (sans propriétaire ni membre).
+            quota_error = None
             with transaction.atomic():
                 if new_organisation_created:
                     organisation = Organisation.objects.create(name=organisation_name)
-                user = serializer.save(organisation=organisation)
-                if organisation.owner_id is None:
-                    organisation.owner = user
-                    organisation.save(update_fields=['owner'])
+                # Quota guard: block once the org's plan elector limit is reached.
+                # set_rollback (not a bare return) so a freshly created org above
+                # doesn't get committed as an orphan when this guard trips.
+                if serializer.validated_data.get('is_elector', True):
+                    quota_error = check_elector_quota(organisation)
+                if quota_error:
+                    transaction.set_rollback(True)
+                else:
+                    user = serializer.save(organisation=organisation)
+                    if organisation.owner_id is None:
+                        organisation.owner = user
+                        organisation.save(update_fields=['owner'])
+            if quota_error:
+                respons['succes'] = False
+                respons['errors'] = quota_error
+                return response.Response(respons, status=status.HTTP_403_FORBIDDEN)
 
             respons['succes'] = True
             respons['data'] = serializer.data
@@ -330,6 +344,12 @@ class MassUserView(APIView):
                 # print('data ', data)
                 serializer = CustomUserSerializer(data=data, many=True)
                 serializer.is_valid(raise_exception=True)
+                # Quota guard: block the whole batch if it would exceed the org's plan elector limit.
+                quota_error = check_elector_quota(request.user.organisation, additional=len(data))
+                if quota_error:
+                    res['success'] = False
+                    res['errors'] = quota_error
+                    return response.Response(data=res, status=status.HTTP_403_FORBIDDEN)
                 # organisation est read-only sur le serializer : tous les
                 # électeurs importés sont rattachés à l'organisation de
                 # l'utilisateur qui fait l'import, jamais à une valeur du fichier.
